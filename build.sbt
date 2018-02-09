@@ -1,0 +1,1 @@
+assemblyJarName := "../../game/game.jar"
