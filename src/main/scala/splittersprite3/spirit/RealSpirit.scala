@@ -39,7 +39,7 @@ abstract class RealSpirit extends Spirit {
     // 指定のリテラルから文字列に変換
     def value2RawValue(value: VALUE): String
 
-    override def apply(field: String) = lock.synchronized {
+    def apply(field: String) = lock.synchronized {
       try {
         rawValueOpt(field).map(rawValue2Value)
       } catch {
@@ -51,14 +51,14 @@ abstract class RealSpirit extends Spirit {
       throw new SpiritValueIsNotFound(path, field)
     }
 
-    override def apply(field: String, default: VALUE) = try {
+    def apply(field: String, default: VALUE) = try {
       apply(field)
     } catch {
       // 文字列が設定されていなかった場合
       case e: SpiritValueIsNotFound => default
     }
 
-    override def update(field: String, value: VALUE) {
+    def update(field: String, value: VALUE) {
       // TODO 設定値更新処理を実装
     }
   }
