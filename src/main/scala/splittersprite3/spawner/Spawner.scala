@@ -3,7 +3,7 @@ package splittersprite3.spawner
 import splittersprite3.spirit.{Spirit}
 
 // XMLファイルを基にインスタンスを生成するトレイト
-trait Spawner[+T] {
+sealed trait Spawner[+T] {
   // SpawnerはSpirit１つを引数とするコンストラクタを実装しなければ
   // ならないとする
   val spirit: Spirit
@@ -21,3 +21,8 @@ trait Spawner[+T] {
   // XMLから読み出すフィールド名・型を取り出すためのフェイク実行
   lazy val fake = spawn(fakeArgs)
 }
+
+// OutermostRealSpirit用のSpawner
+trait OutermostSpawner[+T] extends Spawner[T]
+// InnerRealSpirit用のSpawner
+trait InnerSpawner[+T] extends Spawner[T]
