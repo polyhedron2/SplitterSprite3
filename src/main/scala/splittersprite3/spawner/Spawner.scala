@@ -4,6 +4,8 @@ import splittersprite3.spirit.{Spirit}
 
 // XMLファイルを基にインスタンスを生成するトレイト
 trait Spawner[+T] {
+  // SpawnerはSpirit１つを引数とするコンストラクタを実装しなければ
+  // ならないとする
   val spirit: Spirit
 
   // 処理中に動的に決定される引数の型定義
