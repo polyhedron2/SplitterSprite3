@@ -33,6 +33,18 @@ abstract class Spirit {
     def update(field: String, value: VALUE): Unit
   }
 
+  // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。
+  // 例：
+  // spirit("ほげ").stringOf("ふが")
+  // は以下のXMLを定める。「????」は適当な値。
+  // <root>
+  //   <inner field="ほげ">
+  //     <val field="ふが">????</val>
+  //   </inner>
+  // </root>
+  //
+  def apply(field: String): Spirit
+
   // 値のファイル保存
   def save(): Unit
 }

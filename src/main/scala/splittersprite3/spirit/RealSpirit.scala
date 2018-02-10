@@ -1,5 +1,7 @@
 package splittersprite3.spirit
 
+import splittersprite3.common
+
 class SpiritValueIsNotFound(path: String, field: String)
   extends Exception(s"${path}[${field}]の値が見つかりません。")
 class SpiritValueIsInvalid(path: String, field: String, cause: Exception)
@@ -58,8 +60,13 @@ abstract class RealSpirit extends Spirit {
       case e: SpiritValueIsNotFound => default
     }
 
-    def update(field: String, value: VALUE) {
-      // TODO 設定値更新処理を実装
-    }
+    def update(field: String, value: VALUE) =
+      throw new UnsupportedOperationException("TODO: 実装")
   }
+
+  // InnerSpirit一覧管理用
+  val innerSpiritMap = new common.Cache[String, InnerRealSpirit] {
+    def valueFor(field: String) = new InnerRealSpirit(RealSpirit.this, field)
+  }
+  def apply(field: String) = innerSpiritMap(field)
 }
