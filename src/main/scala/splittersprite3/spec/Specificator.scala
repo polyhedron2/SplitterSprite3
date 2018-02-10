@@ -17,9 +17,9 @@ object Specificator extends common.Cache[Class[_ <: Spawner[Any]],
 
     // クラスインスタンスからリフレクションによりspawnerインスタンスを取得
     val spawner = try {
+      // SpawnerにはSpirit１つを引数とするコンストラクタが実装されている
       val constructor = cls.getConstructor(classOf[Spirit])
-      val instance = constructor.newInstance(spirit)
-      instance
+      constructor.newInstance(spirit)
     } catch {
       case e: Exception => throw new FailureToSpawnFakeInstance(cls, e)
     }
