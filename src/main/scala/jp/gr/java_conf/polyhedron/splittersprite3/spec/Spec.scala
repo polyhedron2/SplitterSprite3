@@ -1,4 +1,4 @@
-package splittersprite3.spec
+package jp.gr.java_conf.polyhedron.splittersprite3.spec
 
 // Spiritから読み出された値の型を表現するクラス
 sealed abstract class Spec

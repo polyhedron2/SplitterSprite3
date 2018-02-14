@@ -1,8 +1,8 @@
-package splittersprite3.spec
+package jp.gr.java_conf.polyhedron.splittersprite3.spec
 
-import splittersprite3.common
-import splittersprite3.spawner.{Spawner}
-import splittersprite3.spirit.{Spirit, FakeSpirit}
+import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
+import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 class FailureToSpawnFakeInstance(
     cls: Class[_ <: Spawner[Any]], cause: Exception)

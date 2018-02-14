@@ -1,4 +1,4 @@
-package splittersprite3.spirit
+package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 // 他XMLの内部XMLを読み書きするRealSpirit
 // outer: １つ外側のRealSpirit

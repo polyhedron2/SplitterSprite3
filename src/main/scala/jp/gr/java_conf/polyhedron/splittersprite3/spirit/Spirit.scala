@@ -1,4 +1,4 @@
-package splittersprite3.spirit
+package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 // XMLファイルへの読み書きを定める抽象クラス
 abstract class Spirit {

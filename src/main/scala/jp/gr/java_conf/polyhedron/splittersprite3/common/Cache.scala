@@ -1,4 +1,4 @@
-package splittersprite3.common
+package jp.gr.java_conf.polyhedron.splittersprite3.common
 
 class InfiniteLoopCacheException() extends Exception()
 

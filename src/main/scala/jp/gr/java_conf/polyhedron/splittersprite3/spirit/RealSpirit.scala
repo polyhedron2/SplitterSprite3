@@ -1,6 +1,6 @@
-package splittersprite3.spirit
+package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 
 class SpiritValueIsNotFound(path: String, field: String)
   extends Exception(s"${path}[${field}]の値が見つかりません。")

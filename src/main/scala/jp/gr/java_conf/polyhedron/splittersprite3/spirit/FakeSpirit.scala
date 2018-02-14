@@ -1,7 +1,7 @@
-package splittersprite3.spirit
+package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import splittersprite3.common
-import splittersprite3.spec.{
+import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.spec.{
   Spec, StringSpec, BooleanSpec, IntSpec, DoubleSpec}
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス

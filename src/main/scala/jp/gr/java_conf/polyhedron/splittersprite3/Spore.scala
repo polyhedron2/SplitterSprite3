@@ -1,4 +1,4 @@
-package splittersprite3
+package jp.gr.java_conf.polyhedron.splittersprite3
 
 // ゲームの開始地点となるシングルトン
 object Spore {

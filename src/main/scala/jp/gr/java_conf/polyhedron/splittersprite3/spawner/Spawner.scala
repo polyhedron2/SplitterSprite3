@@ -1,6 +1,6 @@
-package splittersprite3.spawner
+package jp.gr.java_conf.polyhedron.splittersprite3.spawner
 
-import splittersprite3.spirit.{Spirit}
+import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit}
 
 // XMLファイルを基にインスタンスを生成するトレイト
 sealed trait Spawner[+T] {
