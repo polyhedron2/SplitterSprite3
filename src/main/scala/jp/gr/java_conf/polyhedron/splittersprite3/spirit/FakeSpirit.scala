@@ -6,7 +6,7 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spec.{
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス
 class FakeSpirit extends Spirit {
-  val path = s"bogus/${this.toString}.xml"
+  val internalPath = s"bogus/${this.toString}.xml"
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, Spec]()
 

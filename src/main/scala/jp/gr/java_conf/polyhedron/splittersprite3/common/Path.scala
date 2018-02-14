@@ -36,6 +36,6 @@ import java.io.{Reader}
 // SpawnerがXMLを読み込む際には最新のヴァージョンディレクトリもしくは
 // パッチディレクトリのXML読み込む。これにより、パッチディレクトリを
 // 置くだけでパッチが適用される。
-class Path(internalPath: String) {
+class Path(val internalPath: String) {
   def reader: Reader = throw new UnsupportedOperationException("TODO: 実装")
 }

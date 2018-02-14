@@ -3,10 +3,10 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 // XMLファイルへの読み書きを定める抽象クラス
 abstract class Spirit {
   // ゲームフォルダ内の相対ファイルパス。区切り文字は'/'で統一。
-  val path: String
+  val internalPath: String
 
   // XMLファイル名
-  def name = path.split('/').last
+  def name = internalPath.split('/').last
 
   // 各リテラル用のアクセサ
   // 例：

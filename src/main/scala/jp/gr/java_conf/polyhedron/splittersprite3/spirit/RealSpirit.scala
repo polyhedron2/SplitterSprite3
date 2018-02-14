@@ -1,16 +1,19 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
+import scala.xml.{Node}
+
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
-class SpiritValueIsNotFound(path: String, field: String)
-  extends Exception(s"${path}[${field}]の値が見つかりません。")
-class SpiritValueIsInvalid(path: String, field: String, cause: Exception)
-  extends Exception(s"${path}[${field}]の値が不正です。", cause)
+class SpiritValueIsNotFound(internalPath: String, field: String)
+  extends Exception(s"${internalPath}[${field}]の値が見つかりません。")
+class SpiritValueIsInvalid(internalPath: String, field: String, cause: Exception)
+  extends Exception(s"${internalPath}[${field}]の値が不正です。", cause)
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
 abstract class RealSpirit extends Spirit {
   // XMLファイルアクセスロック用オブジェクト
   val lock: AnyRef
+  def xml: Node
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
   def rawValueOpt(field: String): Option[String]
@@ -46,11 +49,12 @@ abstract class RealSpirit extends Spirit {
         rawValueOpt(field).map(rawValue2Value)
       } catch {
         // 文字列をリテラルに変換できなかった場合
-        case e: Exception => throw new SpiritValueIsInvalid(path, field, e)
+        case e: Exception =>
+          throw new SpiritValueIsInvalid(internalPath, field, e)
       }
     } getOrElse {
       // 文字列が設定されていなかった場合
-      throw new SpiritValueIsNotFound(path, field)
+      throw new SpiritValueIsNotFound(internalPath, field)
     }
 
     def apply(field: String, default: VALUE) = try {

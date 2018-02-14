@@ -3,3 +3,4 @@ name := "SplitterSprite3"
 version := gameVersion
 assemblyJarName := s"../../game/ver${gameVersion}/game.jar"
 mainClass := Some("jp.gr.java_conf.polyhedron.splittersprite3.Spore")
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
