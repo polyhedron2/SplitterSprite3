@@ -12,6 +12,7 @@ class OutermostRealSpirit(path: common.Path) extends RealSpirit {
   val lock = this
   val internalPath = path.internalPath
 
+  // XMLの編集履歴
   var historyIndex = 0
   var xmlHistory = Map(0 -> XML.load(path.reader))
 

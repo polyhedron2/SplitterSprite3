@@ -14,7 +14,7 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
 
   def xml =
     (outer.xml \ "inner").find(_.\("@field").text == fieldToThis).getOrElse {
-      // Empty XML
+      // 親がこのInnerRealSpirit用のXMLを持たない場合は空のXMLを読む
       XML.loadString("<root/>")
     }
 
