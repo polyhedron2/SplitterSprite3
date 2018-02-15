@@ -18,8 +18,5 @@ class OutermostRealSpirit(path: common.Path) extends RealSpirit {
 
   def xml = xmlHistory(historyIndex)
 
-  def rawValueOpt(field: String) =
-    throw new UnsupportedOperationException("TODO: 実装")
-
   def save() = throw new UnsupportedOperationException("TODO: 実装")
 }

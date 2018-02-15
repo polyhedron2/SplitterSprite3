@@ -18,8 +18,5 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
       XML.loadString("<root/>")
     }
 
-  def rawValueOpt(field: String) =
-    throw new UnsupportedOperationException("TODO: 実装")
-
   def save() = outer.save()
 }

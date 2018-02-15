@@ -16,7 +16,8 @@ abstract class RealSpirit extends Spirit {
   def xml: Node
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  def rawValueOpt(field: String): Option[String]
+  def rawValueOpt(field: String) =
+    (outer.xml \ "val").find(_.\("@field").text == field).map(_.text)
 
   val stringOf = new RealAccessor[String] {
     def rawValue2Value(rawValue: String) = rawValue
