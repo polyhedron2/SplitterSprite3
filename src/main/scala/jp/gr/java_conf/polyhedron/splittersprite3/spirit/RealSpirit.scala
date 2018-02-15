@@ -3,11 +3,16 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 import scala.xml.{Node}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
 
 class SpiritValueIsNotFound(internalPath: String, field: String)
   extends Exception(s"${internalPath}[${field}]の値が見つかりません。")
 class SpiritValueIsInvalid(internalPath: String, field: String, cause: Exception)
   extends Exception(s"${internalPath}[${field}]の値が不正です。", cause)
+class SpawnerProcessingLoopException(internalPath: String)
+  extends Exception(s"${internalPath}のSpawnerが循環参照しています。")
+class SpawnerIsNotDefined(internalPath: String)
+  extends Exception(s"${internalPath}のSpawnerが未定義です。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
 abstract class RealSpirit extends Spirit {
@@ -15,9 +20,31 @@ abstract class RealSpirit extends Spirit {
   val lock: AnyRef
   def xml: Node
 
+  private def _rawValueOpt(element: String, field: String) =
+    (xml \ element).find(_.\("@field").text == field).map(_.text)
+
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  def rawValueOpt(field: String) =
-    (outer.xml \ "val").find(_.\("@field").text == field).map(_.text)
+  def rawValueOpt(field: String) = _rawValueOpt("val", field)
+
+  // spawner取得処理の無限ループ検出用
+  private var isProcessingSpawner = false
+
+  // このSpiritからSpawnするSpawner
+  def spawner = if (isProcessingSpawner) {
+    throw new SpawnerProcessingLoopException(internalPath)
+  } else {
+    val clsPath = _rawValueOpt("spawner", "spawner").getOrElse {
+      throw new SpawnerIsNotDefined(internalPath)
+    }
+    try {
+      isProcessingSpawner = true
+      val cls = Class.forName(clsPath)
+      val constructor = cls.getConstructor(classOf[Spirit])
+      constructor.newInstance(this).asInstanceOf[Spawner[Any]]
+    } finally {
+      isProcessingSpawner = false
+    }
+  }
 
   val stringOf = new RealAccessor[String] {
     def rawValue2Value(rawValue: String) = rawValue
