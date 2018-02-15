@@ -1,7 +1,5 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.common
 
-import java.io.{Reader}
-
 // SplitterSprite3でのディレクトリ構造は以下の構造とする
 //
 // game/ (ゲームディレクトリ, 名称自由)
@@ -36,6 +34,8 @@ import java.io.{Reader}
 // SpawnerがXMLを読み込む際には最新のヴァージョンディレクトリもしくは
 // パッチディレクトリのXML読み込む。これにより、パッチディレクトリを
 // 置くだけでパッチが適用される。
+//
+// internalPath: 内部パス、ファイル区切り文字は'/'で統一
 class Path(val internalPath: String) {
-  def reader: Reader = throw new UnsupportedOperationException("TODO: 実装")
+  def reader = Channel.reader(internalPath)
 }
