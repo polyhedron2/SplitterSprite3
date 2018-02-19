@@ -1,3 +1,4 @@
 target/
 *.class
+game/log/*.log
 .DS_Store
