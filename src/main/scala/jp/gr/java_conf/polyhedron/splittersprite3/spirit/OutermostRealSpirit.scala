@@ -14,7 +14,7 @@ class OutermostRealSpirit(path: common.Path) extends RealSpirit {
 
   // XMLの編集履歴
   var historyIndex = 0
-  var xmlHistory = Map(0 -> XML.load(path.reader))
+  var xmlHistory = Map(0 -> path.withReader(XML.load))
 
   def xml = xmlHistory(historyIndex)
 

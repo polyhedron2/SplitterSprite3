@@ -7,14 +7,19 @@ import java.nio.file.{Files, Paths, FileSystems}
 // を管理するシングルトン
 // 内部パスの実体パスへの変換を行う。
 object Channel {
-  def reader(internalPath: String): Reader = {
+  def withReader[T](internalPath: String)(op: Reader => T): T = {
     val separator = FileSystems.getDefault().getSeparator()
     val internalJPath = Paths.get(internalPath.replace("/", separator))
     for (appliedPatchDir <- FileUtils.appliedPatchDirList) {
       val canonicalJPath = appliedPatchDir.resolve(internalJPath)
       if (Files.exists(canonicalJPath)) {
         // UTF-8として読み込み
-        return Files.newBufferedReader(canonicalJPath)
+        val reader = Files.newBufferedReader(canonicalJPath)
+        try {
+          op(reader)
+        } finally {
+          reader.close()
+        }
       }
     }
     throw new FileIsNotFound(internalPath)

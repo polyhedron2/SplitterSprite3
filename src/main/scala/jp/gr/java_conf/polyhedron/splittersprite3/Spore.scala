@@ -16,6 +16,8 @@ object Spore {
         "=====================================================")
     } catch {
       case e: Exception => e.printStackTrace()
+    } finally {
+      common.Logger.close()
     }
   }
 
