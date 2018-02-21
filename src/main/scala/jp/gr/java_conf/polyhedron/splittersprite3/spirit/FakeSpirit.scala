@@ -1,26 +1,25 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
-import jp.gr.java_conf.polyhedron.splittersprite3.spec.{
-  Spec, StringSpec, BooleanSpec, IntSpec, DoubleSpec}
+import jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス
 class FakeSpirit extends Spirit {
   val internalPath = s"bogus/${this.toString}.xml"
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
-  var specMap = Map[String, Spec]()
+  var specMap = Map[String, agent.Spec]()
 
-  val stringOf = new FakeAccessor("this is dummy string.", StringSpec)
-  val booleanOf = new FakeAccessor(false, BooleanSpec)
-  val intOf = new FakeAccessor(1, IntSpec)
-  val doubleOf = new FakeAccessor(1.0, DoubleSpec)
+  val stringOf = new FakeAccessor("this is dummy string.", agent.StringSpec)
+  val booleanOf = new FakeAccessor(false, agent.BooleanSpec)
+  val intOf = new FakeAccessor(1, agent.IntSpec)
+  val doubleOf = new FakeAccessor(1.0, agent.DoubleSpec)
 
   // 読み書きメソッドの呼び出しをマップに記録するフェイクアクセサ
   // dummyDefaultValue: 読み出しを受けた際のダミー値
   // specFactory: デフォルト値のOptionを受け取り型情報(Specクラスインスタンス)
   //              を返す関数オブジェクト
   class FakeAccessor[VALUE](dummyDefaultValue: VALUE,
-                            specFactory: Option[VALUE] => Spec)
+                            specFactory: Option[VALUE] => agent.Spec)
       extends Accessor[VALUE] {
     // 書き込まれた値を保持するマップ
     private var dummyValueMap =

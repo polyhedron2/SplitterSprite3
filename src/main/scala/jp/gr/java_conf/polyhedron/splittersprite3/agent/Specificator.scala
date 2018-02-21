@@ -1,8 +1,15 @@
-package jp.gr.java_conf.polyhedron.splittersprite3.spec
+package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
+
+// Spiritから読み出された値の型を表現するクラス
+sealed abstract class Spec
+case class StringSpec(defaultOpt: Option[String]) extends Spec
+case class BooleanSpec(defaultOpt: Option[Boolean]) extends Spec
+case class IntSpec(defaultOpt: Option[Int]) extends Spec
+case class DoubleSpec(defaultOpt: Option[Double]) extends Spec
 
 class FailureToSpawnFakeInstance(
     cls: Class[_ <: Spawner[Any]], cause: Exception)

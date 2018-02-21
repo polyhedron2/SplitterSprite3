@@ -1,8 +1,10 @@
-package jp.gr.java_conf.polyhedron.splittersprite3.common
+package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import java.io.{PrintStream, PrintWriter}
 import java.nio.file.{Files, Paths, Path => JPath, FileSystems}
 import java.util.{Calendar}
+
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 
 sealed abstract class LogLevel {
   val level: Int
@@ -41,7 +43,7 @@ object Logger {
       f"${cal.get(Calendar.SECOND)}%02d_" +
       f"${cal.get(Calendar.MILLISECOND)}%03d" +
       s".log")
-    FileUtils.gameDirPath.resolve(localLogPath)
+    common.FileUtils.gameDirPath.resolve(localLogPath)
   }
 
   private val stderr = new PrintStream(System.err, true, "UTF-8")
