@@ -6,27 +6,6 @@ import java.util.{Calendar}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
-sealed abstract class LogLevel {
-  val level: Int
-  val name: String
-  def <(that: LogLevel) = this.level < that.level
-  def <=(that: LogLevel) = this.level <= that.level
-  def >(that: LogLevel) = this.level > that.level
-  def >=(that: LogLevel) = this.level >= that.level
-}
-// 致命的エラー　プログラムの異常終了など
-case object Fatal extends LogLevel { val level = 5; val name = "FATAL" }
-// 予期せぬ実行時エラー
-case object Error extends LogLevel { val level = 4; val name = "ERROR" }
-// 警告　不適切なAPI使用、予期せぬ状態
-case object Warn extends LogLevel { val level = 3; val name = "WARN" }
-// 情報　実行時の注目すべき事象、処理の開始・終了など
-case object Info extends LogLevel { val level = 2; val name = "INFO" }
-// デバッグ情報　システムの動作状況
-case object Debug extends LogLevel { val level = 1; val name = "DEBUG" }
-// トレース情報　システムの詳細な動作状況
-case object Trace extends LogLevel { val level = 0; val name = "TRACE" }
-
 // ログ出力管理を行うシングルトン
 object Logger extends Agent {
   var logLevel: LogLevel = Info
@@ -126,4 +105,26 @@ object Logger extends Agent {
     infoLog("Closing...")
     writerOpt.foreach(_.close())
   }
+
+  sealed abstract class LogLevel {
+    val level: Int
+    val name: String
+    def <(that: LogLevel) = this.level < that.level
+    def <=(that: LogLevel) = this.level <= that.level
+    def >(that: LogLevel) = this.level > that.level
+    def >=(that: LogLevel) = this.level >= that.level
+  }
+
+  // 致命的エラー　プログラムの異常終了など
+  case object Fatal extends LogLevel { val level = 5; val name = "FATAL" }
+  // 予期せぬ実行時エラー
+  case object Error extends LogLevel { val level = 4; val name = "ERROR" }
+  // 警告　不適切なAPI使用、予期せぬ状態
+  case object Warn extends LogLevel { val level = 3; val name = "WARN" }
+  // 情報　実行時の注目すべき事象、処理の開始・終了など
+  case object Info extends LogLevel { val level = 2; val name = "INFO" }
+  // デバッグ情報　システムの動作状況
+  case object Debug extends LogLevel { val level = 1; val name = "DEBUG" }
+  // トレース情報　システムの詳細な動作状況
+  case object Trace extends LogLevel { val level = 0; val name = "TRACE" }
 }

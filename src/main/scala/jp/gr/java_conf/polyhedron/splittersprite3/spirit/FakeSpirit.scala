@@ -7,19 +7,21 @@ import jp.gr.java_conf.polyhedron.splittersprite3.agent
 class FakeSpirit extends Spirit {
   val internalPath = s"bogus/${this.toString}.xml"
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
-  var specMap = Map[String, agent.Spec]()
+  var specMap = Map[String, agent.Specificator.Spec]()
 
-  val stringOf = new FakeAccessor("this is dummy string.", agent.StringSpec)
-  val booleanOf = new FakeAccessor(false, agent.BooleanSpec)
-  val intOf = new FakeAccessor(1, agent.IntSpec)
-  val doubleOf = new FakeAccessor(1.0, agent.DoubleSpec)
+  val stringOf = new FakeAccessor("this is dummy string.",
+                                  agent.Specificator.StringSpec)
+  val booleanOf = new FakeAccessor(false, agent.Specificator.BooleanSpec)
+  val intOf = new FakeAccessor(1, agent.Specificator.IntSpec)
+  val doubleOf = new FakeAccessor(1.0, agent.Specificator.DoubleSpec)
 
   // 読み書きメソッドの呼び出しをマップに記録するフェイクアクセサ
   // dummyDefaultValue: 読み出しを受けた際のダミー値
   // specFactory: デフォルト値のOptionを受け取り型情報(Specクラスインスタンス)
   //              を返す関数オブジェクト
-  class FakeAccessor[VALUE](dummyDefaultValue: VALUE,
-                            specFactory: Option[VALUE] => agent.Spec)
+  class FakeAccessor[VALUE](
+        dummyDefaultValue: VALUE,
+        specFactory: Option[VALUE] => agent.Specificator.Spec)
       extends Accessor[VALUE] {
     // 書き込まれた値を保持するマップ
     private var dummyValueMap =
