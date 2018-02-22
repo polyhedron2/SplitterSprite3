@@ -1,6 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
-import java.io.{PrintStream, PrintWriter}
+import java.io.{PrintStream, PrintWriter, StringWriter}
 import java.nio.file.{Files, Paths, Path => JPath, FileSystems}
 import java.util.{Calendar}
 
@@ -28,7 +28,7 @@ case object Debug extends LogLevel { val level = 1; val name = "DEBUG" }
 case object Trace extends LogLevel { val level = 0; val name = "TRACE" }
 
 // ログ出力管理を行うシングルトン
-object Logger {
+object Logger extends Agent {
   var logLevel: LogLevel = Info
 
   val logPath = {
@@ -48,6 +48,9 @@ object Logger {
 
   private val stderr = new PrintStream(System.err, true, "UTF-8")
   private val writer = new PrintWriter(Files.newBufferedWriter(logPath), true)
+  private var _opened = true
+
+  def is_opened = _opened
 
   private def println(message: String) = synchronized {
     stderr.println(message)
@@ -67,5 +70,49 @@ object Logger {
   def debugLog(message: String) = showMessage(Debug, message)
   def traceLog(message: String) = showMessage(Trace, message)
 
-  def close() = writer.close()
+  def showPropertyInfo(key: String) {
+    infoLog(s"${key}: ${System.getProperty(key)}")
+  }
+
+  def stackTraceLines(ex: Exception) = {
+    val stringWriter = new StringWriter()
+    val printWriter = new PrintWriter(stringWriter, true)
+    ex.printStackTrace(printWriter)
+    stringWriter.toString().lines
+  }
+
+  private def _printStackTrace(ex: Exception) {
+    try {
+      ex.printStackTrace(stderr)
+      ex.printStackTrace(writer)
+    } catch {
+      case e: Exception => e.printStackTrace()
+    }
+  }
+
+  def printStackTrace(ex: Exception, messageLevel: LogLevel = Fatal) {
+    try {
+      stackTraceLines(ex).foreach(showMessage(messageLevel, _))
+    } catch {
+      case e: Exception => {
+        _printStackTrace(ex)
+        _printStackTrace(e)
+      }
+    }
+  }
+
+  override def open() {
+    infoLog("================== SYSTEM PROPERTY ==================")
+    showPropertyInfo("java.version")
+    showPropertyInfo("java.runtime.version")
+    showPropertyInfo("java.runtime.name")
+    showPropertyInfo("java.vm.version")
+    showPropertyInfo("java.vm.name")
+    infoLog("=====================================================")
+  }
+
+  override def close() {
+    writer.close()
+    _opened = false
+  }
 }
