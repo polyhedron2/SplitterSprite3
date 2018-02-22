@@ -1,30 +1,34 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
-trait Agent { def open() = {}; def close() = {} }
+class AgentDoublyUsed(a: Agent)
+  extends Exception(s"エージェント${a}が多重に起動されました。")
+
+trait Agent {
+  protected def enter() = {}
+  protected def exit(exOpt: Option[Exception]) = exOpt.foreach { throw _ }
+  private var alreadyUsing = false
+  def loan(operation: => Any) = synchronized {
+    if (alreadyUsing) { throw new AgentDoublyUsed(this) }
+
+    val exOpt = try {
+      alreadyUsing = true
+      enter()
+      operation
+      None
+    } catch {
+      case e: Exception => Some(e)
+    } finally {
+      alreadyUsing = false
+    }
+
+    exit(exOpt)
+  }
+}
 
 object Agent {
-  lazy val agents = Seq(Logger, Specificator)
-
-  def open() { agents.foreach(_.open()) }
-
-  def close() { agents.reverse.foreach(a => try {
-    a.close()
+  def loan(operation: => Any) = try {
+    Logger.loan { Specificator.loan { operation } }
   } catch {
-    case e: Exception => if (Logger.is_opened) {
-      Logger.printStackTrace(e, Error)
-    } else {
-      e.printStackTrace()
-    }
-  }) }
-
-  def withAgents(operation: Unit => Any) {
-    try {
-      open()
-      operation()
-    } catch {
-      case e: Exception => Logger.printStackTrace(e)
-    } finally {
-      close()
-    }
+    case e: Exception => e.printStackTrace()
   }
 }

@@ -31,30 +31,34 @@ case object Trace extends LogLevel { val level = 0; val name = "TRACE" }
 object Logger extends Agent {
   var logLevel: LogLevel = Info
 
-  val logPath = {
-    val cal = Calendar.getInstance()
-    val localLogPath = Paths.get(
-      "log",
-      f"${cal.get(Calendar.YEAR)}%04d_" +
-      f"${cal.get(Calendar.MONTH) + 1}%02d_" +
-      f"${cal.get(Calendar.DATE)}%02d_" +
-      f"${cal.get(Calendar.HOUR_OF_DAY)}%02d_" +
-      f"${cal.get(Calendar.MINUTE)}%02d_" +
-      f"${cal.get(Calendar.SECOND)}%02d_" +
-      f"${cal.get(Calendar.MILLISECOND)}%03d" +
-      s".log")
-    common.FileUtils.gameDirPath.resolve(localLogPath)
-  }
-
   private val stderr = new PrintStream(System.err, true, "UTF-8")
-  private val writer = new PrintWriter(Files.newBufferedWriter(logPath), true)
-  private var _opened = true
+  private var writerOpt: Option[PrintWriter] = None
 
-  def is_opened = _opened
+  def buildWriter() = {
+    val logPath = {
+      val cal = Calendar.getInstance()
+      val localLogPath = Paths.get(
+        "log",
+        f"${cal.get(Calendar.YEAR)}%04d_" +
+        f"${cal.get(Calendar.MONTH) + 1}%02d_" +
+        f"${cal.get(Calendar.DATE)}%02d_" +
+        f"${cal.get(Calendar.HOUR_OF_DAY)}%02d_" +
+        f"${cal.get(Calendar.MINUTE)}%02d_" +
+        f"${cal.get(Calendar.SECOND)}%02d_" +
+        f"${cal.get(Calendar.MILLISECOND)}%03d" +
+        s".log")
+      common.FileUtils.gameDirPath.resolve(localLogPath)
+    }
+
+    new PrintWriter(Files.newBufferedWriter(logPath), true)
+  }
 
   private def println(message: String) = synchronized {
     stderr.println(message)
-    writer.println(message)
+    writerOpt match {
+      case Some(writer) => writer.println(message)
+      case None => stderr.println("StackTrace is not logged into log file.")
+    }
   }
 
   private def showMessage(messageLevel: LogLevel, message: String) {
@@ -78,19 +82,24 @@ object Logger extends Agent {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter, true)
     ex.printStackTrace(printWriter)
-    stringWriter.toString().lines
+    val ret = stringWriter.toString().lines
+    printWriter.close()
+    ret
   }
 
   private def _printStackTrace(ex: Exception) {
     try {
       ex.printStackTrace(stderr)
-      ex.printStackTrace(writer)
+      writerOpt match {
+        case Some(writer) => ex.printStackTrace(writer)
+        case None => stderr.println("StackTrace is not logged into log file.")
+      }
     } catch {
       case e: Exception => e.printStackTrace()
     }
   }
 
-  def printStackTrace(ex: Exception, messageLevel: LogLevel = Fatal) {
+  def printStackTrace(ex: Exception, messageLevel: LogLevel) {
     try {
       stackTraceLines(ex).foreach(showMessage(messageLevel, _))
     } catch {
@@ -101,7 +110,8 @@ object Logger extends Agent {
     }
   }
 
-  override def open() {
+  override def enter() {
+    writerOpt = Some(buildWriter())
     infoLog("================== SYSTEM PROPERTY ==================")
     showPropertyInfo("java.version")
     showPropertyInfo("java.runtime.version")
@@ -111,8 +121,9 @@ object Logger extends Agent {
     infoLog("=====================================================")
   }
 
-  override def close() {
-    writer.close()
-    _opened = false
+  override def exit(exOpt: Option[Exception]) {
+    exOpt.foreach { printStackTrace(_, Fatal) }
+    infoLog("Closing...")
+    writerOpt.foreach(_.close())
   }
 }
