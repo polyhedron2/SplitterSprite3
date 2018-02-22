@@ -101,7 +101,8 @@ object Logger extends Agent {
   }
 
   override def exit(exOpt: Option[Exception]) {
-    exOpt.foreach { printStackTrace(_, Fatal) }
+    exOpt.foreach { case ex => printStackTrace(
+      new Exception("ゲーム実行中にエラーが発生しました。", ex), Fatal) }
     infoLog("Closing...")
     writerOpt.foreach(_.close())
   }
