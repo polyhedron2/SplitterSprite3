@@ -27,7 +27,7 @@ trait Agent {
 
 object Agent {
   def loan(operation: => Any) = try {
-    Logger.loan { Specificator.loan { operation } }
+    Logger.loan { ThreadPool.loan { Specificator.loan { operation } } }
   } catch {
     case e: Exception => e.printStackTrace()
   }
