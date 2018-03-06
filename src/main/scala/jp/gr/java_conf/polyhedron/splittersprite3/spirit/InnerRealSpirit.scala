@@ -1,6 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import scala.xml.{XML}
+import scala.xml.{XML, Node}
 
 // 他XMLの内部XMLを読み書きするRealSpirit
 // outer: １つ外側のRealSpirit
@@ -12,11 +12,11 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
   val lock = outer.lock
   val internalPath = s"${outer.internalPath}[${fieldToThis}]"
 
-  def xml =
+  def xml: Node =
     (outer.xml \ "inner").find(_.\("@field").text == fieldToThis).getOrElse {
       // 親がこのInnerRealSpirit用のXMLを持たない場合は空のXMLを読む
       XML.loadString("<root/>")
     }
 
-  def save() = outer.save()
+  def save(): Unit = outer.save()
 }

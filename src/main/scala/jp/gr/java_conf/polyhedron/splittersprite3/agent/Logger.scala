@@ -4,29 +4,29 @@ import java.io.{PrintStream, PrintWriter, StringWriter}
 import java.nio.file.{Files, Paths, Path => JPath, FileSystems}
 import java.util.{Calendar}
 
-import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 
 // ログ出力管理を行うシングルトン
-object Logger extends Agent {
+object Logger extends LoanAgent {
   var logLevel: LogLevel = Info
 
   private val stderr = new PrintStream(System.err, true, "UTF-8")
   private var writerOpt: Option[PrintWriter] = None
 
-  def buildWriter() = {
+  private def buildWriter() = {
     val logPath = {
       val cal = Calendar.getInstance()
       val localLogPath = Paths.get(
         "log",
-        f"${cal.get(Calendar.YEAR)}%04d_" +
-        f"${cal.get(Calendar.MONTH) + 1}%02d_" +
+        f"${cal.get(Calendar.YEAR)}%04d-" +
+        f"${cal.get(Calendar.MONTH) + 1}%02d-" +
         f"${cal.get(Calendar.DATE)}%02d_" +
-        f"${cal.get(Calendar.HOUR_OF_DAY)}%02d_" +
-        f"${cal.get(Calendar.MINUTE)}%02d_" +
-        f"${cal.get(Calendar.SECOND)}%02d_" +
+        f"${cal.get(Calendar.HOUR_OF_DAY)}%02d:" +
+        f"${cal.get(Calendar.MINUTE)}%02d:" +
+        f"${cal.get(Calendar.SECOND)}%02d." +
         f"${cal.get(Calendar.MILLISECOND)}%03d" +
         s".log")
-      common.FileUtils.gameDirPath.resolve(localLogPath)
+      Atmosphere.gameDirPath.resolve(localLogPath)
     }
 
     new PrintWriter(Files.newBufferedWriter(logPath), true)
@@ -46,18 +46,18 @@ object Logger extends Agent {
     }
   }
 
-  def fatalLog(message: String) = showMessage(Fatal, message)
-  def errorLog(message: String) = showMessage(Error, message)
-  def warnLog(message: String) = showMessage(Warn, message)
-  def infoLog(message: String) = showMessage(Info, message)
-  def debugLog(message: String) = showMessage(Debug, message)
-  def traceLog(message: String) = showMessage(Trace, message)
+  def fatalLog(message: String) { showMessage(Fatal, message) }
+  def errorLog(message: String) { showMessage(Error, message) }
+  def warnLog(message: String) { showMessage(Warn, message) }
+  def infoLog(message: String) { showMessage(Info, message) }
+  def debugLog(message: String) { showMessage(Debug, message) }
+  def traceLog(message: String) { showMessage(Trace, message) }
 
   def showPropertyInfo(key: String) {
     infoLog(s"${key}: ${System.getProperty(key)}")
   }
 
-  def stackTraceLines(ex: Exception) = {
+  def stackTraceLines(ex: Exception): Iterator[String] = {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter, true)
     ex.printStackTrace(printWriter)
@@ -66,7 +66,7 @@ object Logger extends Agent {
     ret
   }
 
-  private def _printStackTrace(ex: Exception) {
+  private def printStackTrace(ex: Exception) {
     try {
       ex.printStackTrace(stderr)
       writerOpt match {
@@ -83,8 +83,8 @@ object Logger extends Agent {
       stackTraceLines(ex).foreach(showMessage(messageLevel, _))
     } catch {
       case e: Exception => {
-        _printStackTrace(ex)
-        _printStackTrace(e)
+        printStackTrace(ex)
+        printStackTrace(e)
       }
     }
   }
@@ -110,10 +110,10 @@ object Logger extends Agent {
   sealed abstract class LogLevel {
     val level: Int
     val name: String
-    def <(that: LogLevel) = this.level < that.level
-    def <=(that: LogLevel) = this.level <= that.level
-    def >(that: LogLevel) = this.level > that.level
-    def >=(that: LogLevel) = this.level >= that.level
+    def <(that: LogLevel): Boolean = this.level < that.level
+    def <=(that: LogLevel): Boolean = this.level <= that.level
+    def >(that: LogLevel): Boolean = this.level > that.level
+    def >=(that: LogLevel): Boolean = this.level >= that.level
   }
 
   // 致命的エラー　プログラムの異常終了など

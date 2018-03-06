@@ -2,6 +2,8 @@ package jp.gr.java_conf.polyhedron.splittersprite3.common
 
 import java.io.{Reader}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
+
 // SplitterSprite3でのディレクトリ構造は以下の構造とする
 //
 // game/ (ゲームディレクトリ, 名称自由)
@@ -39,5 +41,6 @@ import java.io.{Reader}
 //
 // internalPath: 内部パス、ファイル区切り文字は'/'で統一
 class Path(val internalPath: String) {
-  def withReader[T](op: Reader => T) = Channel.withReader(internalPath)(op)
+  def withReader[T](op: Reader => T): T =
+    Atmosphere.withReader(internalPath)(op)
 }

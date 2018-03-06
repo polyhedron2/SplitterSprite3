@@ -10,8 +10,8 @@ class FailureToSpawnFakeInstance(
 
 // SpawnerにFakeSpiritからspawnさせることでフィールド・型情報を
 // FakeSpiritに覚えさせるシングルトン
-object Specificator extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit]
-                    with Agent {
+object Specificator
+extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
   override protected def valueFor(cls: Class[_ <: Spawner[Any]]) = {
     val spirit = new FakeSpirit()
 

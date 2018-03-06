@@ -7,7 +7,8 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
 
 class SpiritValueIsNotFound(internalPath: String, field: String)
   extends Exception(s"${internalPath}[${field}]の値が見つかりません。")
-class SpiritValueIsInvalid(internalPath: String, field: String, cause: Exception)
+class SpiritValueIsInvalid(
+  internalPath: String, field: String, cause: Exception)
   extends Exception(s"${internalPath}[${field}]の値が不正です。", cause)
 class SpawnerProcessingLoopException(internalPath: String)
   extends Exception(s"${internalPath}のSpawnerが循環参照しています。")
@@ -20,20 +21,20 @@ abstract class RealSpirit extends Spirit {
   val lock: AnyRef
   def xml: Node
 
-  private def _rawValueOpt(element: String, field: String) =
+  private def rawValueOpt(element: String, field: String) =
     (xml \ element).find(_.\("@field").text == field).map(_.text)
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  def rawValueOpt(field: String) = _rawValueOpt("val", field)
+  def rawValueOpt(field: String): Option[String] = rawValueOpt("val", field)
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
 
   // このSpiritからSpawnするSpawner
-  def spawner = if (isProcessingSpawner) {
+  def spawner: Spawner[Any] = if (isProcessingSpawner) {
     throw new SpawnerProcessingLoopException(internalPath)
   } else {
-    val clsPath = _rawValueOpt("spawner", "spawner").getOrElse {
+    val clsPath = rawValueOpt("spawner", "spawner").getOrElse {
       throw new SpawnerIsNotDefined(internalPath)
     }
     try {
@@ -72,7 +73,7 @@ abstract class RealSpirit extends Spirit {
     // 指定のリテラルから文字列に変換
     def value2RawValue(value: VALUE): String
 
-    def apply(field: String) = lock.synchronized {
+    def apply(field: String): VALUE = lock.synchronized {
       try {
         rawValueOpt(field).map(rawValue2Value)
       } catch {
@@ -85,20 +86,21 @@ abstract class RealSpirit extends Spirit {
       throw new SpiritValueIsNotFound(internalPath, field)
     }
 
-    def apply(field: String, default: VALUE) = try {
+    def apply(field: String, default: VALUE): VALUE = try {
       apply(field)
     } catch {
       // 文字列が設定されていなかった場合
       case e: SpiritValueIsNotFound => default
     }
 
-    def update(field: String, value: VALUE) =
+    def update(field: String, value: VALUE) {
       throw new UnsupportedOperationException("TODO: 実装")
+    }
   }
 
   // InnerSpirit一覧管理用
   val innerSpiritMap = new common.Cache[String, InnerRealSpirit] {
     def valueFor(field: String) = new InnerRealSpirit(RealSpirit.this, field)
   }
-  def apply(field: String) = innerSpiritMap(field)
+  def apply(field: String): RealSpirit = innerSpiritMap(field)
 }

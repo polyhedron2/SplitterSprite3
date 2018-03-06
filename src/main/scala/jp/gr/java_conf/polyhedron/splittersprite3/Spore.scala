@@ -4,7 +4,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3
 object Spore {
   def main(args: Array[String]) {
     // 仮実装
-    agent.Agent.loan {
+    agent.LoanAgent.loan {
       agent.Logger.infoLog("Hello World!!")
     }
   }

@@ -4,14 +4,17 @@ import java.lang.{Thread => JThread}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
-object ThreadPool extends Agent {
+object ThreadPool extends LoanAgent {
   private var runningThreads = Set[Thread]()
 
   //スレッドオブジェクトを２回スタートしないために開始後に終了用関数のみ返す
-  def startAndGetHalter(runnable: common.Runnable) = synchronized {
-    val thread = new Thread(runnable)
-    thread.start()
-    thread.halt
+  def startAndGetHalter(runnable: common.Runnable) {
+    synchronized {
+      val thread = new Thread(runnable)
+      add(thread)
+      thread.start()
+      thread.halt
+    }
   }
 
   private def add(thread: Thread) = synchronized {
@@ -32,11 +35,10 @@ object ThreadPool extends Agent {
 
   private class Thread(runnable: common.Runnable) extends JThread(runnable) {
     override def run() {
-      add(this)
       super.run()
       remove(this)
     }
 
-    def halt() = runnable.halt()
+    def halt() { runnable.halt() }
   }
 }

@@ -9,7 +9,7 @@ trait Cache[KEY, VALUE] {
   // 無限ループ検出用
   private var processing = Set[KEY]()
 
-  def apply(key: KEY) = synchronized {
+  def apply(key: KEY): VALUE = synchronized {
     // 多重に評価が実行されているため無限ループとして例外をスロー
     if (processing(key)) { throw new InfiniteLoopCacheException() }
 

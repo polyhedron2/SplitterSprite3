@@ -6,7 +6,7 @@ abstract class Spirit {
   val internalPath: String
 
   // XMLファイル名
-  def name = internalPath.split('/').last
+  def name: String = internalPath.split('/').last
 
   // 各リテラル用のアクセサ
   // 例：

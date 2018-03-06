@@ -11,9 +11,9 @@ sealed trait Spawner[+T] {
   // 処理中に動的に決定される引数の型定義
   type SpawnArgs
   // インスタンス生成を行うメソッド
-  protected def _spawn(args: SpawnArgs): T
-  def spawn(args: SpawnArgs) = {
-    _spawn(args)
+  protected def pureSpawn(args: SpawnArgs): T
+  def spawn(args: SpawnArgs): T = {
+    pureSpawn(args)
   }
 
   // XMLから読み出すフィールド名・型を取り出すためのフェイク実行用の引数

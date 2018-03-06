@@ -16,7 +16,7 @@ class OutermostRealSpirit(path: common.Path) extends RealSpirit {
   var historyIndex = 0
   var xmlHistory = Map(0 -> path.withReader(XML.load))
 
-  def xml = xmlHistory(historyIndex)
+  def xml: Elem = xmlHistory(historyIndex)
 
-  def save() = throw new UnsupportedOperationException("TODO: 実装")
+  def save() { throw new UnsupportedOperationException("TODO: 実装") }
 }

@@ -26,20 +26,22 @@ class FakeSpirit extends Spirit {
     // 書き込まれた値を保持するマップ
     private var dummyValueMap =
       Map[String, VALUE]().withDefaultValue(dummyDefaultValue)
-    private def _apply(field: String, defaultOpt: Option[VALUE]) = {
+    private def apply(field: String, defaultOpt: Option[VALUE]) = {
       specMap += (field -> specFactory(defaultOpt))
       dummyValueMap(field)
     }
-    def apply(field: String) = _apply(field, None)
-    def apply(field: String, default: VALUE) = _apply(field, Some(default))
-    def update(field: String, value: VALUE) = dummyValueMap += (field -> value)
+    def apply(field: String): VALUE = apply(field, None)
+    def apply(field: String, default: VALUE): VALUE =
+      apply(field, Some(default))
+    def update(field: String, value: VALUE): Unit =
+      dummyValueMap += (field -> value)
   }
 
   // フェイクのInnerSpirit一覧管理用
   val innerSpiritMap = new common.Cache[String, FakeSpirit] {
     def valueFor(field: String) = new FakeSpirit()
   }
-  def apply(field: String) = innerSpiritMap(field)
+  def apply(field: String): FakeSpirit = innerSpiritMap(field)
 
   def save() { }
 }
