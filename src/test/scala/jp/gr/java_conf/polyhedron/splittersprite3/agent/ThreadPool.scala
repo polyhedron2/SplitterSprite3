@@ -1,5 +1,6 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions {
@@ -17,16 +18,21 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions {
       }
     }
 
-    agent.ThreadPool.loan {
-      assert(agent.ThreadPool.size === 0)
-      agent.ThreadPool.startAndGetHalter(runnable)
-      assert(agent.ThreadPool.size === 1)
-      // 変数更新前
-      assert(checked === false)
-      Thread.sleep(wait_ms * 2)
-      // 変数更新済
-      assert(agent.ThreadPool.size === 0)
-      assert(checked === true)
+    Atmosphere.withTmpGameDirPath {
+      Atmosphere.withMockedStdErrStream {
+        val success = agent.LoanAgent.loan {
+        assert(agent.ThreadPool.size === 0)
+        agent.ThreadPool.startAndGetHalter(runnable)
+        assert(agent.ThreadPool.size === 1)
+        // 変数更新前
+        assert(checked === false)
+        Thread.sleep(wait_ms * 2)
+        // 変数更新済
+        assert(agent.ThreadPool.size === 0)
+        assert(checked === true)
+      }
+      assert(success)
+      }
     }
   }
 
@@ -42,26 +48,31 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions {
       }
     }
 
-    agent.ThreadPool.loan {
-      assert(count === 0)
-      assert(agent.ThreadPool.size === 0)
-      val halt = agent.ThreadPool.startAndGetHalter(runnable)
-      assert(agent.ThreadPool.size === 1)
-      Thread.sleep(wait_ms * 2)
-      // 増加中
-      assert(count > 0)
-      var prevCount = count
-      Thread.sleep(wait_ms * 2)
-      // 増加中
-      assert(agent.ThreadPool.size === 1)
-      assert(count > prevCount)
+    Atmosphere.withTmpGameDirPath {
+      Atmosphere.withMockedStdErrStream {
+        val success = agent.LoanAgent.loan {
+          assert(count === 0)
+          assert(agent.ThreadPool.size === 0)
+          val halt = agent.ThreadPool.startAndGetHalter(runnable)
+          assert(agent.ThreadPool.size === 1)
+          Thread.sleep(wait_ms * 2)
+          // 増加中
+          assert(count > 0)
+          var prevCount = count
+          Thread.sleep(wait_ms * 2)
+          // 増加中
+          assert(agent.ThreadPool.size === 1)
+          assert(count > prevCount)
 
-      halt()
-      Thread.sleep(wait_ms * 2)
-      assert(agent.ThreadPool.size === 0)
-      prevCount = count
-      Thread.sleep(wait_ms * 2)
-      assert(count === prevCount)
+          halt()
+          Thread.sleep(wait_ms * 2)
+          assert(agent.ThreadPool.size === 0)
+          prevCount = count
+          Thread.sleep(wait_ms * 2)
+          assert(count === prevCount)
+        }
+        assert(success)
+      }
     }
   }
 }

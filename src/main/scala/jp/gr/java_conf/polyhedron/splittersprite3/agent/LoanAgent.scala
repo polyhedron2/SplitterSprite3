@@ -12,40 +12,52 @@ trait LoanAgent {
   protected def exit(exOpt: Option[Exception]) = exOpt.foreach { throw _ }
 
   protected var alreadyUsing = false
-  def loan(operation: => Any) {
+  def loan(operation: => Any): Boolean = {
     synchronized {
       if (alreadyUsing) { throw new AgentDoublyUsed(this) }
       alreadyUsing = true
     }
 
-    val exOpt = try {
+    val success = try {
       enter()
       operation
-      None
+      exit(None)
+      true
     } catch {
-      case e: Exception => Some(e)
+      case e: Exception => {
+        exit(Some(e))
+        false
+      }
     }
 
-    exit(exOpt)
     synchronized { alreadyUsing = false }
+    success
   }
 }
 
 object LoanAgent {
   lazy val agents = List(Logger, ThreadPool)
 
-  private def loan(operation: => Any, agentList: List[LoanAgent]) {
+  // 戻り値は成功終了か否か
+  private def loan(operation: => Any, agentList: List[LoanAgent]): Boolean = {
     agentList match {
       case head :: tail => head.loan { loan(operation, tail) }
-      case Nil => operation
+      case Nil => {
+        operation
+        true
+      }
     }
   }
 
-  def loan(operation: => Any) {
+  // 戻り値は成功終了か否か
+  def loan(operation: => Any): Boolean = {
     try {
       loan(operation, agents)
     } catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception => {
+        e.printStackTrace()
+        false
+      }
     }
   }
 }

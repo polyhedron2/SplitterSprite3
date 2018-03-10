@@ -17,11 +17,14 @@ class FileIsNotFound(val patchablePath: String)
 
 object FileUtils {
   // 実行ファイルのパス
-  val gameJarPath =
+  lazy val gameJarPath =
     Paths.get(System.getProperty("java.class.path")).toAbsolutePath()
-  val verOrPatchDirPath = gameJarPath.getParent()
-  val gameDirPath = verOrPatchDirPath.getParent()
-  val appliedPatchDirList = appliedPatchDirListTo(verOrPatchDirPath)
+  lazy val verOrPatchDirPath = gameJarPath.getParent()
+  lazy val gameDirPath = verOrPatchDirPath.getParent()
+  lazy val appliedPatchDirList = appliedPatchDirListTo(verOrPatchDirPath)
+
+  lazy val tmpDirPath =
+    Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath()
 
   def tailNameOf(jPath: JPath): String =
     jPath.getName(jPath.getNameCount() - 1).toString

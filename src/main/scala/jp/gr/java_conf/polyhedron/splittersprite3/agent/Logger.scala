@@ -1,8 +1,9 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
-import java.io.{PrintStream, PrintWriter, StringWriter}
+import java.io.{PrintWriter, StringWriter}
 import java.nio.file.{Files, Paths, Path => JPath, FileSystems}
 import java.util.{Calendar}
+import scala.collection.JavaConverters._
 
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 
@@ -10,23 +11,36 @@ import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 object Logger extends LoanAgent {
   var logLevel: LogLevel = Info
 
-  private val stderr = new PrintStream(System.err, true, "UTF-8")
+  private def stderr = Atmosphere.stdErrStream
   private var writerOpt: Option[PrintWriter] = None
+  private val logDirPath = Atmosphere.gameDirPath.resolve(Paths.get("log"))
+  private val maxLogFileCount = 10
 
   private def buildWriter() = {
     val logPath = {
       val cal = Calendar.getInstance()
-      val localLogPath = Paths.get(
-        "log",
+
+      val dayOfWeek = Calendar.DAY_OF_WEEK match {
+        case Calendar.SUNDAY => "SUN"
+        case Calendar.MONDAY => "MON"
+        case Calendar.TUESDAY => "TUE"
+        case Calendar.WEDNESDAY => "WED"
+        case Calendar.THURSDAY => "THU"
+        case Calendar.FRIDAY => "FRI"
+        case Calendar.SATURDAY => "SAT"
+      }
+
+      val logFileName = Paths.get(
         f"${cal.get(Calendar.YEAR)}%04d-" +
         f"${cal.get(Calendar.MONTH) + 1}%02d-" +
         f"${cal.get(Calendar.DATE)}%02d_" +
+        s"${dayOfWeek}_" +
         f"${cal.get(Calendar.HOUR_OF_DAY)}%02d:" +
         f"${cal.get(Calendar.MINUTE)}%02d:" +
         f"${cal.get(Calendar.SECOND)}%02d." +
         f"${cal.get(Calendar.MILLISECOND)}%03d" +
         s".log")
-      Atmosphere.gameDirPath.resolve(localLogPath)
+      logDirPath.resolve(logFileName)
     }
 
     new PrintWriter(Files.newBufferedWriter(logPath), true)
@@ -36,7 +50,7 @@ object Logger extends LoanAgent {
     stderr.println(message)
     writerOpt match {
       case Some(writer) => writer.println(message)
-      case None => stderr.println("StackTrace is not logged into log file.")
+      case None =>
     }
   }
 
@@ -90,6 +104,12 @@ object Logger extends LoanAgent {
   }
 
   override def enter() {
+    Files.createDirectories(logDirPath)
+
+    Files.list(logDirPath).iterator().asScala.toList.sortBy(_.toString)
+      .reverse.zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
+      .foreach(Files.delete)
+
     writerOpt = Some(buildWriter())
     infoLog("================== SYSTEM PROPERTY ==================")
     showPropertyInfo("java.version")
