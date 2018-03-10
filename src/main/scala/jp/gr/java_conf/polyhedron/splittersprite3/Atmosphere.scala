@@ -12,6 +12,7 @@ object Atmosphere {
   private var innerIOUtils = defaultIOUtils
   def ioUtils: outerspace.IOUtils = innerIOUtils
 
+  // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(gameJarPathFromGameDirPath: Path)(op: => Any):
       outerspace.TestIOUtils = {
     val prevIOUtils = innerIOUtils
@@ -27,9 +28,4 @@ object Atmosphere {
 
   def withTestIOUtils(op: => Any): outerspace.TestIOUtils =
     withTestIOUtils(Paths.get("ver1.0.0", "game.jar"))(op)
-
-  def withReader[T](patchablePath: String)(op: Reader => T): T = {
-    val reader = ioUtils.patchedReader(patchablePath)
-    try { op(reader) } finally { reader.close() }
-  }
 }

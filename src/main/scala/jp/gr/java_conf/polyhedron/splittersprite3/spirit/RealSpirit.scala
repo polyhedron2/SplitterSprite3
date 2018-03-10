@@ -5,15 +5,15 @@ import scala.xml.{Node}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
 
-class SpiritValueIsNotFound(internalPath: String, field: String)
-  extends Exception(s"${internalPath}[${field}]の値が見つかりません。")
+class SpiritValueIsNotFound(patchablePath: String, field: String)
+  extends Exception(s"${patchablePath}[${field}]の値が見つかりません。")
 class SpiritValueIsInvalid(
-  internalPath: String, field: String, cause: Exception)
-  extends Exception(s"${internalPath}[${field}]の値が不正です。", cause)
-class SpawnerProcessingLoopException(internalPath: String)
-  extends Exception(s"${internalPath}のSpawnerが循環参照しています。")
-class SpawnerIsNotDefined(internalPath: String)
-  extends Exception(s"${internalPath}のSpawnerが未定義です。")
+  patchablePath: String, field: String, cause: Exception)
+  extends Exception(s"${patchablePath}[${field}]の値が不正です。", cause)
+class SpawnerProcessingLoopException(patchablePath: String)
+  extends Exception(s"${patchablePath}のSpawnerが循環参照しています。")
+class SpawnerIsNotDefined(patchablePath: String)
+  extends Exception(s"${patchablePath}のSpawnerが未定義です。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
 abstract class RealSpirit extends Spirit {
@@ -32,10 +32,10 @@ abstract class RealSpirit extends Spirit {
 
   // このSpiritからSpawnするSpawner
   def spawner: Spawner[Any] = if (isProcessingSpawner) {
-    throw new SpawnerProcessingLoopException(internalPath)
+    throw new SpawnerProcessingLoopException(patchablePath)
   } else {
     val clsPath = rawValueOpt("spawner", "spawner").getOrElse {
-      throw new SpawnerIsNotDefined(internalPath)
+      throw new SpawnerIsNotDefined(patchablePath)
     }
     try {
       isProcessingSpawner = true
@@ -79,11 +79,11 @@ abstract class RealSpirit extends Spirit {
       } catch {
         // 文字列をリテラルに変換できなかった場合
         case e: Exception =>
-          throw new SpiritValueIsInvalid(internalPath, field, e)
+          throw new SpiritValueIsInvalid(patchablePath, field, e)
       }
     } getOrElse {
       // 文字列が設定されていなかった場合
-      throw new SpiritValueIsNotFound(internalPath, field)
+      throw new SpiritValueIsNotFound(patchablePath, field)
     }
 
     def apply(field: String, default: VALUE): VALUE = try {

@@ -10,7 +10,7 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = outer.lock
-  val internalPath = s"${outer.internalPath}[${fieldToThis}]"
+  val patchablePath = s"${outer.patchablePath}[${fieldToThis}]"
 
   def xml: Node =
     (outer.xml \ "inner").find(_.\("@field").text == fieldToThis).getOrElse {

@@ -10,7 +10,7 @@ class OutermostRealSpirit(path: common.Path) extends RealSpirit {
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = this
-  val internalPath = path.internalPath
+  val patchablePath = path.patchablePath
 
   // XMLの編集履歴
   var historyIndex = 0
