@@ -19,9 +19,8 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      Atmosphere.withMockedStdErrStream {
-        val success = agent.LoanAgent.loan {
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
         assert(agent.ThreadPool.size === 0)
         agent.ThreadPool.startAndGetHalter(runnable)
         assert(agent.ThreadPool.size === 1)
@@ -33,7 +32,6 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(checked === true)
       }
       assert(success)
-      }
     }
   }
 
@@ -49,31 +47,29 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      Atmosphere.withMockedStdErrStream {
-        val success = agent.LoanAgent.loan {
-          assert(count === 0)
-          assert(agent.ThreadPool.size === 0)
-          val halt = agent.ThreadPool.startAndGetHalter(runnable)
-          assert(agent.ThreadPool.size === 1)
-          Thread.sleep(wait_ms * 2)
-          // 増加中
-          assert(count > 0)
-          var prevCount = count
-          Thread.sleep(wait_ms * 2)
-          // 増加中
-          assert(agent.ThreadPool.size === 1)
-          assert(count > prevCount)
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
+        assert(count === 0)
+        assert(agent.ThreadPool.size === 0)
+        val halt = agent.ThreadPool.startAndGetHalter(runnable)
+        assert(agent.ThreadPool.size === 1)
+        Thread.sleep(wait_ms * 2)
+        // 増加中
+        assert(count > 0)
+        var prevCount = count
+        Thread.sleep(wait_ms * 2)
+        // 増加中
+        assert(agent.ThreadPool.size === 1)
+        assert(count > prevCount)
 
-          halt()
-          Thread.sleep(wait_ms * 2)
-          assert(agent.ThreadPool.size === 0)
-          prevCount = count
-          Thread.sleep(wait_ms * 2)
-          assert(count === prevCount)
-        }
-        assert(success)
+        halt()
+        Thread.sleep(wait_ms * 2)
+        assert(agent.ThreadPool.size === 0)
+        prevCount = count
+        Thread.sleep(wait_ms * 2)
+        assert(count === prevCount)
       }
+      assert(success)
     }
   }
 
@@ -93,13 +89,11 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       override def exit() { checkList :+= "exit" }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      Atmosphere.withMockedStdErrStream {
-        val success = agent.LoanAgent.loan {
-          agent.ThreadPool.startAndGetHalter(runnable)
-        }
-        assert(success)
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
+        agent.ThreadPool.startAndGetHalter(runnable)
       }
+      assert(success)
     }
 
     checkList should be (
@@ -126,13 +120,11 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       override def exit() { checkList :+= "exit" }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      Atmosphere.withMockedStdErrStream {
-        val success = agent.LoanAgent.loan {
-          agent.ThreadPool.startAndGetHalter(runnable)
-        }
-        assert(success)
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
+        agent.ThreadPool.startAndGetHalter(runnable)
       }
+      assert(success)
     }
 
     checkList should be (
@@ -175,22 +167,20 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      Atmosphere.withMockedStdErrStream {
-        val startTime_ns = System.nanoTime()
-        val success = agent.LoanAgent.loan {
-          assert(agent.ThreadPool.size === 0)
-          agent.ThreadPool.startAndGetHalter(shortRunnable)
-          agent.ThreadPool.startAndGetHalter(middleRunnable)
-          agent.ThreadPool.startAndGetHalter(longRunnable)
-          assert(agent.ThreadPool.size === 3)
-        }
-        assert(success)
-        val endTime_ns = System.nanoTime()
-        assert(endTime_ns - startTime_ns > wait_ns * 15)
-        assert(endTime_ns - startTime_ns < wait_ns * 20)
-        checkSet should be (Set("exitShort", "exitMiddle", "exitLong"))
+    Atmosphere.withTestIOUtils {
+      val startTime_ns = System.nanoTime()
+      val success = agent.LoanAgent.loan {
+        assert(agent.ThreadPool.size === 0)
+        agent.ThreadPool.startAndGetHalter(shortRunnable)
+        agent.ThreadPool.startAndGetHalter(middleRunnable)
+        agent.ThreadPool.startAndGetHalter(longRunnable)
+        assert(agent.ThreadPool.size === 3)
       }
+      assert(success)
+      val endTime_ns = System.nanoTime()
+      assert(endTime_ns - startTime_ns > wait_ns * 15)
+      assert(endTime_ns - startTime_ns < wait_ns * 20)
+      checkSet should be (Set("exitShort", "exitMiddle", "exitLong"))
     }
   }
 
@@ -233,26 +223,25 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      val error = Atmosphere.withMockedStdErrStream {
-        val startTime_ns = System.nanoTime()
-        val success = agent.LoanAgent.loan {
-          assert(agent.ThreadPool.size === 0)
-          agent.ThreadPool.startAndGetHalter(shortRunnable)
-          agent.ThreadPool.startAndGetHalter(middleRunnable)
-          agent.ThreadPool.startAndGetHalter(longRunnable)
-          assert(agent.ThreadPool.size === 3)
-        }
-        assert(success)
-        val endTime_ns = System.nanoTime()
-        assert(endTime_ns - startTime_ns < wait_ns * 10)
-        checkSet should be (Set("exitShort", "exitMiddle", "exitLong"))
+    val testIOUtils = Atmosphere.withTestIOUtils {
+      val startTime_ns = System.nanoTime()
+      val success = agent.LoanAgent.loan {
+        assert(agent.ThreadPool.size === 0)
+        agent.ThreadPool.startAndGetHalter(shortRunnable)
+        agent.ThreadPool.startAndGetHalter(middleRunnable)
+        agent.ThreadPool.startAndGetHalter(longRunnable)
+        assert(agent.ThreadPool.size === 3)
       }
-      error should include (
-        "FATAL: java.lang.Exception: this is exception for test.")
-      error should include (
-        "ERROR: java.lang.Exception: this is second exception for test.")
+      assert(success)
+      val endTime_ns = System.nanoTime()
+      assert(endTime_ns - startTime_ns < wait_ns * 10)
+      checkSet should be (Set("exitShort", "exitMiddle", "exitLong"))
     }
+    val error = testIOUtils.dumpStdErr()
+    error should include (
+      "FATAL: java.lang.Exception: this is exception for test.")
+    error should include (
+      "ERROR: java.lang.Exception: this is second exception for test.")
   }
 
   "ThreadPool" should "呼び出しスレッドの例外終了で即時終了処理" in {
@@ -269,26 +258,25 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      val error = Atmosphere.withMockedStdErrStream {
-        val startTime_ns = System.nanoTime()
-        val success = agent.LoanAgent.loan {
-          assert(agent.ThreadPool.size === 0)
-          agent.ThreadPool.startAndGetHalter(infiniteRunnable)
-          assert(agent.ThreadPool.size === 1)
-          // 例外により終了
-          throw new Exception("this is exception for test.")
-        }
-        assert(!success)
-        val endTime_ns = System.nanoTime()
-        assert(endTime_ns - startTime_ns < wait_ns * 5)
-        checkSet should be (Set("exitInfinite"))
+    val testIOUtils = Atmosphere.withTestIOUtils {
+      val startTime_ns = System.nanoTime()
+      val success = agent.LoanAgent.loan {
+        assert(agent.ThreadPool.size === 0)
+        agent.ThreadPool.startAndGetHalter(infiniteRunnable)
+        assert(agent.ThreadPool.size === 1)
+        // 例外により終了
+        throw new Exception("this is exception for test.")
       }
-      error should include (
-        "FATAL: java.lang.Exception: ゲーム実行中にエラーが発生しました。")
-      error should include (
-        "FATAL: Caused by: java.lang.Exception: this is exception for test.")
+      assert(!success)
+      val endTime_ns = System.nanoTime()
+      assert(endTime_ns - startTime_ns < wait_ns * 5)
+      checkSet should be (Set("exitInfinite"))
     }
+    val error = testIOUtils.dumpStdErr()
+    error should include (
+      "FATAL: java.lang.Exception: ゲーム実行中にエラーが発生しました。")
+    error should include (
+      "FATAL: Caused by: java.lang.Exception: this is exception for test.")
   }
 
   "ThreadPool" should "規定値以上のスレッドが起動されると警告ログが出る" in {
@@ -299,8 +287,8 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
 
-    Atmosphere.withTmpGameDirPath {
-      val error = Atmosphere.withMockedStdErrStream {
+    {
+      val testIOUtils = Atmosphere.withTestIOUtils {
         val success = agent.LoanAgent.loan {
           assert(agent.ThreadPool.size === 0)
           // ちょうど規定値以内のスレッドを起動
@@ -313,6 +301,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         }
         assert(!success)
       }
+      val error = testIOUtils.dumpStdErr()
       error should include (
         "FATAL: java.lang.Exception: ゲーム実行中にエラーが発生しました。")
       error should include (
@@ -320,8 +309,8 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       error should not include ("WARN: Too many threads: ")
     }
 
-    Atmosphere.withTmpGameDirPath {
-      val error = Atmosphere.withMockedStdErrStream {
+    {
+      val testIOUtils = Atmosphere.withTestIOUtils {
         val success = agent.LoanAgent.loan {
           assert(agent.ThreadPool.size === 0)
           // ちょうど規定値を超えるスレッドを起動
@@ -334,6 +323,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         }
         assert(!success)
       }
+      val error = testIOUtils.dumpStdErr()
       error should include (
         "FATAL: java.lang.Exception: ゲーム実行中にエラーが発生しました。")
       error should include (

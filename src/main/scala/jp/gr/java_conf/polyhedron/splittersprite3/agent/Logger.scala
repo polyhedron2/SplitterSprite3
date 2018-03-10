@@ -11,9 +11,10 @@ import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 object Logger extends LoanAgent {
   var logLevel: LogLevel = Info
 
-  private def stderr = Atmosphere.stdErrStream
+  private def stderr = Atmosphere.ioUtils.stderr
   private var writerOpt: Option[PrintWriter] = None
-  private val logDirPath = Atmosphere.gameDirPath.resolve(Paths.get("log"))
+  private val logDirPath =
+    Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
   private val maxLogFileCount = 10
 
   private def buildWriter() = {
