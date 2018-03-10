@@ -121,9 +121,10 @@ object Logger extends LoanAgent {
   }
 
   override def exit(exOpt: Option[Exception]) {
+    infoLog("Closing Logger...")
     exOpt.foreach { case ex => printStackTrace(
       new Exception("ゲーム実行中にエラーが発生しました。", ex), Fatal) }
-    infoLog("Closing...")
+    infoLog("Logger is successfully closed.")
     writerOpt.foreach(_.close())
   }
 

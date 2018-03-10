@@ -1,5 +1,7 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
+import org.scalatest.exceptions.TestFailedException
+
 class AgentDoublyUsed(a: LoanAgent)
   extends Exception(s"エージェント${a}が多重に起動されました。")
 
@@ -12,26 +14,31 @@ trait LoanAgent {
   protected def exit(exOpt: Option[Exception]) = exOpt.foreach { throw _ }
 
   protected var alreadyUsing = false
+
+  // 戻り値は成功終了か否か
   def loan(operation: => Any): Boolean = {
     synchronized {
       if (alreadyUsing) { throw new AgentDoublyUsed(this) }
       alreadyUsing = true
     }
 
-    val success = try {
-      enter()
-      operation
-      exit(None)
-      true
-    } catch {
-      case e: Exception => {
-        exit(Some(e))
-        false
+    try {
+      val exOpt = try {
+        enter()
+        operation
+        None
+      } catch {
+        // テストのアサーションエラーはそのままthrow
+        case e: TestFailedException => throw e
+        case e: Exception => Some(e)
       }
-    }
+      exit(exOpt)
 
-    synchronized { alreadyUsing = false }
-    success
+      // exOptがNoneであれば成功終了
+      exOpt.isEmpty
+    } finally {
+      synchronized { alreadyUsing = false }
+    }
   }
 }
 
@@ -43,7 +50,9 @@ object LoanAgent {
     agentList match {
       case head :: tail => head.loan { loan(operation, tail) }
       case Nil => {
+        Logger.infoLog("All agents are successfully started.")
         operation
+        Logger.infoLog("Game starting process is successfully finished.")
         true
       }
     }
@@ -54,6 +63,8 @@ object LoanAgent {
     try {
       loan(operation, agents)
     } catch {
+      // テストのアサーションエラーはそのままthrow
+      case e: TestFailedException => throw e
       case e: Exception => {
         e.printStackTrace()
         false
