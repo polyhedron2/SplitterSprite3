@@ -11,23 +11,23 @@ trait LoanAgent {
   //exOpt: 途中で例外が発生したらSome(ex), なければNone
   protected def exit(exOpt: Option[Exception]) = exOpt.foreach { throw _ }
 
-  private var alreadyUsing = false
+  protected var alreadyUsing = false
   def loan(operation: => Any) {
-    if (alreadyUsing) { throw new AgentDoublyUsed(this) }
     synchronized {
-      val exOpt = try {
-        alreadyUsing = true
-        enter()
-        operation
-        None
-      } catch {
-        case e: Exception => Some(e)
-      } finally {
-        alreadyUsing = false
-      }
-
-      exit(exOpt)
+      if (alreadyUsing) { throw new AgentDoublyUsed(this) }
+      alreadyUsing = true
     }
+
+    val exOpt = try {
+      enter()
+      operation
+      None
+    } catch {
+      case e: Exception => Some(e)
+    }
+
+    exit(exOpt)
+    synchronized { alreadyUsing = false }
   }
 }
 
