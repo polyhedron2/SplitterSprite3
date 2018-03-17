@@ -333,13 +333,16 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   }
 
   "ThreadPool" should "スレッドプール起動前にスレッドを利用すると例外" in {
-    intercept[agent.ThreadPool.IsNotReady] {
-      agent.ThreadPool.startAndGetHalter(new agent.ThreadPool.Runnable() {
-        override def runOnce() = {
-          Thread.sleep(wait_ms)
-          true
-        }
-      })
+    // 他テストによるスレッドプール起動を避けるためにロック取得
+    agent.LoanAgent.synchronized {
+      intercept[agent.ThreadPool.IsNotReady] {
+        agent.ThreadPool.startAndGetHalter(new agent.ThreadPool.Runnable() {
+          override def runOnce() = {
+            Thread.sleep(wait_ms)
+            true
+          }
+        })
+      }
     }
   }
 }

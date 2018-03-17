@@ -13,11 +13,9 @@ object Logger extends LoanAgent {
 
   private def stderr = Atmosphere.ioUtils.stderr
   private var writerOpt: Option[PrintWriter] = None
-  private val logDirPath =
-    Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
   private val maxLogFileCount = 10
 
-  private def buildWriter() = {
+  private def buildWriter(logDirPath: JPath) = {
     val logPath = {
       val cal = Calendar.getInstance()
 
@@ -105,13 +103,15 @@ object Logger extends LoanAgent {
   }
 
   override def enter() {
+    val logDirPath =
+      Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
     Files.createDirectories(logDirPath)
 
     Files.list(logDirPath).iterator().asScala.toList.sortBy(_.toString)
       .reverse.zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
       .foreach(Files.delete)
 
-    writerOpt = Some(buildWriter())
+    writerOpt = Some(buildWriter(logDirPath))
     infoLog("================== SYSTEM PROPERTY ==================")
     showPropertyInfo("java.version")
     showPropertyInfo("java.runtime.version")

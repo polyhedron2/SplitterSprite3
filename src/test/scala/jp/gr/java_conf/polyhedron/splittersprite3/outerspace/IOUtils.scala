@@ -1,6 +1,8 @@
 import java.nio.file.{Path, Paths, Files}
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
+import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
@@ -82,180 +84,197 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }).toList
 
   "IOUtils" should "tailNameOfでPathの末尾の名前を取得" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
-
-    for ((path, name) <- pathTailMap) {
-      assert(ioUtils.tailNameOf(path) === name)
-      val absPath = path.toAbsolutePath()
-      assert(ioUtils.tailNameOf(absPath) === name)
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for ((path, name) <- pathTailMap) {
+          assert(Atmosphere.ioUtils.tailNameOf(path) === name)
+          val absPath = path.toAbsolutePath()
+          assert(Atmosphere.ioUtils.tailNameOf(absPath) === name)
+        }
+      }
     }
   }
 
   "IOUtils" should "文字列\"verA.B.C\"は(A, B, C)にパースされる" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
-
-    for ((name, answer) <- validVerNameAndAnswerList) {
-      assert(ioUtils.parseVersionName(name) === answer)
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for ((name, answer) <- validVerNameAndAnswerList) {
+          assert(Atmosphere.ioUtils.parseVersionName(name) === answer)
+        }
+      }
     }
   }
 
   "IOUtils" should "不正なバージョン名の文字列はInvalidVersionName例外" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
-
-    for (name <- invalidVerNameList) {
-      val e = intercept[outerspace.IOUtils.InvalidVersionName] {
-        ioUtils.parseVersionName(name)
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for (name <- invalidVerNameList) {
+          val e = intercept[outerspace.IOUtils.InvalidVersionName] {
+            Atmosphere.ioUtils.parseVersionName(name)
+          }
+          assert(e.name === name)
+        }
       }
-      assert(e.name === name)
     }
   }
 
   "IOUtils" should "ディレクトリ名\"verA.B.C\"は(A, B, C)にパースされる" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
-
-    for ((name, answer) <- validVerNameAndAnswerList;
-         parentDir <- pathTailMap.keys) {
-      val dir = parentDir.resolve(name)
-      assert(ioUtils.parseVersionDirectory(dir) === answer)
-      val absDir = dir.toAbsolutePath
-      assert(ioUtils.parseVersionDirectory(absDir) === answer)
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for ((name, answer) <- validVerNameAndAnswerList;
+            parentDir <- pathTailMap.keys) {
+          val dir = parentDir.resolve(name)
+          assert(Atmosphere.ioUtils.parseVersionDirectory(dir) === answer)
+          val absDir = dir.toAbsolutePath
+          assert(Atmosphere.ioUtils.parseVersionDirectory(absDir) === answer)
+        }
+      }
     }
   }
 
   "IOUtils" should
       "不正なバージョン名のディレクトリはInvalidVersionDirectory例外" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for (name <- invalidVerNameList; parentDir <- pathTailMap.keys) {
+          val dir = parentDir.resolve(name)
+          val e = intercept[outerspace.IOUtils.InvalidVersionDirectory] {
+            Atmosphere.ioUtils.parseVersionDirectory(dir)
+          }
+          assert(e.path === dir)
 
-    for (name <- invalidVerNameList; parentDir <- pathTailMap.keys) {
-      val dir = parentDir.resolve(name)
-      val e = intercept[outerspace.IOUtils.InvalidVersionDirectory] {
-        ioUtils.parseVersionDirectory(dir)
+          val absDir = dir.toAbsolutePath
+          val absE = intercept[outerspace.IOUtils.InvalidVersionDirectory] {
+            Atmosphere.ioUtils.parseVersionDirectory(absDir)
+          }
+          assert(absE.path === absDir)
+        }
       }
-      assert(e.path === dir)
-
-      val absDir = dir.toAbsolutePath
-      val absE = intercept[outerspace.IOUtils.InvalidVersionDirectory] {
-        ioUtils.parseVersionDirectory(absDir)
-      }
-      assert(absE.path === absDir)
     }
   }
 
   "IOUtils" should
       ("ディレクトリ名\"patch_from_verA.B.C_to_verX.Y.Z\"は" +
       "((A, B, C), (X, Y, Z))にパースされる") in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
-
-    for ((patchName, answer) <- validPatchNameAndAnswerList;
-         parentDir <- pathTailMap.keys) {
-      val dir = parentDir.resolve(patchName)
-      assert(ioUtils.parsePatchDirectory(dir) === answer)
-      assert(ioUtils.parsePatchDirectory(dir.toAbsolutePath) === answer)
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for ((patchName, answer) <- validPatchNameAndAnswerList;
+            parentDir <- pathTailMap.keys) {
+          val dir = parentDir.resolve(patchName)
+          assert(Atmosphere.ioUtils.parsePatchDirectory(dir) === answer)
+          assert(Atmosphere.ioUtils.parsePatchDirectory(dir.toAbsolutePath) ===
+                 answer)
+        }
+      }
     }
   }
 
   "IOUtils" should
       "不正なパッチ名のディレクトリはInvalidPatchDirectory例外" in {
-    val ioUtils = new outerspace.TestIOUtils(Paths.get("ver1.0.0", "game.jar"))
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        for (patchName <- invalidVerNameList; parentDir <- pathTailMap.keys) {
+          val dir = parentDir.resolve(patchName)
 
-    for (patchName <- invalidVerNameList; parentDir <- pathTailMap.keys) {
-      val dir = parentDir.resolve(patchName)
+          val e = intercept[outerspace.IOUtils.InvalidPatchDirectory] {
+            Atmosphere.ioUtils.parsePatchDirectory(dir)
+          }
+          assert(e.path === dir)
 
-      val e = intercept[outerspace.IOUtils.InvalidPatchDirectory] {
-        ioUtils.parsePatchDirectory(dir)
+          val absE = intercept[outerspace.IOUtils.InvalidPatchDirectory] {
+            Atmosphere.ioUtils.parsePatchDirectory(dir.toAbsolutePath)
+          }
+          assert(absE.path === dir.toAbsolutePath)
+        }
       }
-      assert(e.path === dir)
-
-      val absE = intercept[outerspace.IOUtils.InvalidPatchDirectory] {
-        ioUtils.parsePatchDirectory(dir.toAbsolutePath)
-      }
-      assert(absE.path === dir.toAbsolutePath)
     }
   }
 
   "IOUtils" should "バージョンディレクトリを判別可能" in {
     for (parentDir <- pathTailMap.keys) {
-      val ioUtils = new outerspace.TestIOUtils(
-        parentDir, Paths.get("ver1.0.0", "game.jar"))
+      Atmosphere.withTestIOUtils(
+          parentDir, Paths.get("ver1.0.0", "game.jar")) {
+        agent.LoanAgent.loan {
+          for (name <- validVerNameAndAnswerList.map(_._1)) {
+            val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
 
-      for (name <- validVerNameAndAnswerList.map(_._1)) {
-        val path = ioUtils.gameDirPath.resolve(name)
+            // 何も存在しないなら偽判定
+            assert(!Atmosphere.ioUtils.isVersionDirectory(path))
 
-        // 何も存在しないなら偽判定
-        assert(!ioUtils.isVersionDirectory(path))
+            // ファイルが存在なら偽判定
+            Files.createFile(path)
+            assert(!Atmosphere.ioUtils.isVersionDirectory(path))
+            Files.delete(path)
 
-        // ファイルが存在なら偽判定
-        Files.createFile(path)
-        assert(!ioUtils.isVersionDirectory(path))
-        Files.delete(path)
+            // ディレクトリが存在なら真判定
+            Files.createDirectories(path)
+            assert(Atmosphere.ioUtils.isVersionDirectory(path))
+            Files.delete(path)
+          }
 
-        // ディレクトリが存在なら真判定
-        Files.createDirectories(path)
-        assert(ioUtils.isVersionDirectory(path))
-        Files.delete(path)
+          for (name <-
+              invalidVerNameList ++ validPatchNameAndAnswerList.map(_._1)) {
+            val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
+
+            // 何も存在しないなら偽判定
+            assert(!Atmosphere.ioUtils.isVersionDirectory(path))
+
+            // ファイルが存在なら偽判定
+            Files.createFile(path)
+            assert(!Atmosphere.ioUtils.isVersionDirectory(path))
+            Files.delete(path)
+
+            // ディレクトリが存在なら偽判定
+            Files.createDirectories(path)
+            assert(!Atmosphere.ioUtils.isVersionDirectory(path))
+            Files.delete(path)
+          }
+        }
       }
-
-      for (name <-
-           invalidVerNameList ++ validPatchNameAndAnswerList.map(_._1)) {
-        val path = ioUtils.gameDirPath.resolve(name)
-
-        // 何も存在しないなら偽判定
-        assert(!ioUtils.isVersionDirectory(path))
-
-        // ファイルが存在なら偽判定
-        Files.createFile(path)
-        assert(!ioUtils.isVersionDirectory(path))
-        Files.delete(path)
-
-        // ディレクトリが存在なら偽判定
-        Files.createDirectories(path)
-        assert(!ioUtils.isVersionDirectory(path))
-        Files.delete(path)
-      }
-
     }
   }
 
   "IOUtils" should "パッチディレクトリを判別可能" in {
     for (parentDir <- pathTailMap.keys) {
-      val ioUtils = new outerspace.TestIOUtils(
-        parentDir, Paths.get("ver1.0.0", "game.jar"))
+      Atmosphere.withTestIOUtils(
+          parentDir, Paths.get("ver1.0.0", "game.jar")) {
+        agent.LoanAgent.loan {
+          for (name <- validPatchNameAndAnswerList.map(_._1)) {
+            val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
 
-      for (name <- validPatchNameAndAnswerList.map(_._1)) {
-        val path = ioUtils.gameDirPath.resolve(name)
+            // 何も存在しないなら偽判定
+            assert(!Atmosphere.ioUtils.isPatchDirectory(path))
 
-        // 何も存在しないなら偽判定
-        assert(!ioUtils.isPatchDirectory(path))
+            // ファイルが存在なら偽判定
+            Files.createFile(path)
+            assert(!Atmosphere.ioUtils.isPatchDirectory(path))
+            Files.delete(path)
 
-        // ファイルが存在なら偽判定
-        Files.createFile(path)
-        assert(!ioUtils.isPatchDirectory(path))
-        Files.delete(path)
+            // ディレクトリが存在なら真判定
+            Files.createDirectories(path)
+            assert(Atmosphere.ioUtils.isPatchDirectory(path))
+            Files.delete(path)
+          }
 
-        // ディレクトリが存在なら真判定
-        Files.createDirectories(path)
-        assert(ioUtils.isPatchDirectory(path))
-        Files.delete(path)
+          for (name <-
+              invalidPatchNameList ++ validVerNameAndAnswerList.map(_._1)) {
+            val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
+
+            // 何も存在しないなら偽判定
+            assert(!Atmosphere.ioUtils.isPatchDirectory(path))
+
+            // ファイルが存在なら偽判定
+            Files.createFile(path)
+            assert(!Atmosphere.ioUtils.isPatchDirectory(path))
+            Files.delete(path)
+
+            // ディレクトリが存在なら偽判定
+            Files.createDirectories(path)
+            assert(!Atmosphere.ioUtils.isPatchDirectory(path))
+            Files.delete(path)
+          }
+        }
       }
-
-      for (name <-
-           invalidPatchNameList ++ validVerNameAndAnswerList.map(_._1)) {
-        val path = ioUtils.gameDirPath.resolve(name)
-
-        // 何も存在しないなら偽判定
-        assert(!ioUtils.isPatchDirectory(path))
-
-        // ファイルが存在なら偽判定
-        Files.createFile(path)
-        assert(!ioUtils.isPatchDirectory(path))
-        Files.delete(path)
-
-        // ディレクトリが存在なら偽判定
-        Files.createDirectories(path)
-        assert(!ioUtils.isPatchDirectory(path))
-        Files.delete(path)
-      }
-
     }
   }
 
@@ -264,20 +283,24 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         verOrPatchDirName: String, otherDirNames: Set[String],
         otherFileNames: Set[String], expectedChainNames: List[String]) {
       for (parentDir <- pathTailMap.keys) {
-        val ioUtils = new outerspace.TestIOUtils(
-          parentDir, Paths.get(verOrPatchDirName, "game.jar"))
-        Files.createDirectories(ioUtils.gameDirPath.resolve(verOrPatchDirName))
-        for (dirName <- otherDirNames) {
-          val path = ioUtils.gameDirPath.resolve(dirName)
-          Files.createDirectories(path)
-        }
-        for (fileName <- otherFileNames) {
-          val path = ioUtils.gameDirPath.resolve(fileName)
-          Files.createFile(path)
-        }
+        Atmosphere.withTestIOUtils(
+            parentDir, Paths.get(verOrPatchDirName, "game.jar")) {
+          agent.LoanAgent.loan {
+            Files.createDirectories(
+              Atmosphere.ioUtils.gameDirPath.resolve(verOrPatchDirName))
+            for (dirName <- otherDirNames) {
+              val path = Atmosphere.ioUtils.gameDirPath.resolve(dirName)
+              Files.createDirectories(path)
+            }
+            for (fileName <- otherFileNames) {
+              val path = Atmosphere.ioUtils.gameDirPath.resolve(fileName)
+              Files.createFile(path)
+            }
 
-        ioUtils.appliedPatchDirList should be (
-          expectedChainNames.map(ioUtils.gameDirPath.resolve))
+            Atmosphere.ioUtils.appliedPatchDirList should be (
+              expectedChainNames.map(Atmosphere.ioUtils.gameDirPath.resolve))
+          }
+        }
       }
     }
 
@@ -324,19 +347,24 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     def assertInvalidPatchChain(
         verOrPatchDirName: String, otherDirNames: Set[String]) {
       for (parentDir <- pathTailMap.keys) {
-        val ioUtils = new outerspace.TestIOUtils(
-          parentDir, Paths.get(verOrPatchDirName, "game.jar"))
-        Files.createDirectories(ioUtils.gameDirPath.resolve(verOrPatchDirName))
-        for (dirName <- otherDirNames) {
-          val path = ioUtils.gameDirPath.resolve(dirName)
-          Files.createDirectories(path)
-        }
+        Atmosphere.withTestIOUtils(
+            parentDir, Paths.get(verOrPatchDirName, "game.jar")) {
+          agent.LoanAgent.loan {
+            Files.createDirectories(
+              Atmosphere.ioUtils.gameDirPath.resolve(verOrPatchDirName))
+            for (dirName <- otherDirNames) {
+              val path = Atmosphere.ioUtils.gameDirPath.resolve(dirName)
+              Files.createDirectories(path)
+            }
 
-        val e = intercept[outerspace.IOUtils.InvalidPatchList] {
-          ioUtils.appliedPatchDirList
+            val e = intercept[outerspace.IOUtils.InvalidPatchList] {
+              Atmosphere.ioUtils.appliedPatchDirList
+            }
+            val expected = Atmosphere.ioUtils.gameDirPath.resolve(
+              verOrPatchDirName).toAbsolutePath
+            assert(e.path === expected)
+          }
         }
-        assert(e.path ===
-               ioUtils.gameDirPath.resolve(verOrPatchDirName).toAbsolutePath)
       }
     }
 
@@ -355,35 +383,43 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         patchablePath += s"/${patchableJPath.getName(i).toString}"
       }
 
-      val ioUtils = new outerspace.TestIOUtils(
-        parentDir, Paths.get("patch_from_ver1.0.1_to_ver1.1.0", "game.jar"))
-      Files.createDirectories(ioUtils.gameDirPath.resolve(
-        "patch_from_ver1.0.1_to_ver1.1.0"))
-      Files.createDirectories(ioUtils.gameDirPath.resolve(
-        "patch_from_ver1.0.0_to_ver1.0.1"))
-      Files.createDirectories(ioUtils.gameDirPath.resolve("ver1.0.0"))
+      Atmosphere.withTestIOUtils(
+          parentDir,
+          Paths.get("patch_from_ver1.0.1_to_ver1.1.0", "game.jar")) {
+        agent.LoanAgent.loan {
+          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+            "patch_from_ver1.0.1_to_ver1.1.0"))
+          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+            "patch_from_ver1.0.0_to_ver1.0.1"))
+          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+            "ver1.0.0"))
 
-      intercept[outerspace.IOUtils.FileIsNotFound] {
-        ioUtils.searchPatchedFile(patchablePath)
+          intercept[outerspace.IOUtils.FileIsNotFound] {
+            Atmosphere.ioUtils.searchPatchedFile(patchablePath)
+          }
+
+          val oldFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
+            "ver1.0.0").resolve(patchableJPath)
+          Files.createDirectories(oldFilePath.getParent())
+          Files.createFile(oldFilePath)
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+                 oldFilePath)
+
+          val newerFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
+            "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchableJPath)
+          Files.createDirectories(newerFilePath.getParent())
+          Files.createFile(newerFilePath)
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+                 newerFilePath)
+
+          val newestFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
+            "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchableJPath)
+          Files.createDirectories(newestFilePath.getParent())
+          Files.createFile(newestFilePath)
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+                 newestFilePath)
+        }
       }
-
-      val oldFilePath =
-        ioUtils.gameDirPath.resolve("ver1.0.0").resolve(patchableJPath)
-      Files.createDirectories(oldFilePath.getParent())
-      Files.createFile(oldFilePath)
-      assert(ioUtils.searchPatchedFile(patchablePath) === oldFilePath)
-
-      val newerFilePath = ioUtils.gameDirPath.resolve(
-        "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchableJPath)
-      Files.createDirectories(newerFilePath.getParent())
-      Files.createFile(newerFilePath)
-      assert(ioUtils.searchPatchedFile(patchablePath) === newerFilePath)
-
-      val newestFilePath = ioUtils.gameDirPath.resolve(
-        "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchableJPath)
-      Files.createDirectories(newestFilePath.getParent())
-      Files.createFile(newestFilePath)
-      assert(ioUtils.searchPatchedFile(patchablePath) === newestFilePath)
     }
   }
 }

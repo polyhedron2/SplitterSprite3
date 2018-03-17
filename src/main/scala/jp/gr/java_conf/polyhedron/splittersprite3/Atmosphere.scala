@@ -13,18 +13,27 @@ object Atmosphere {
   def ioUtils: outerspace.IOUtils = innerIOUtils
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
-  def withTestIOUtils(gameJarPathFromGameDirPath: Path)(op: => Any):
-      outerspace.TestIOUtils = {
+  def withTestIOUtils(
+    gameDirPathFromTestDirPath: Path,
+    gameJarPathFromGameDirPath: Path)(op: => Any):
+      outerspace.TestIOUtils = synchronized {
     val prevIOUtils = innerIOUtils
-    val testIOUtils = new outerspace.TestIOUtils(gameJarPathFromGameDirPath)
+    val testIOUtils = new outerspace.TestIOUtils(
+      gameDirPathFromTestDirPath, gameJarPathFromGameDirPath)
     try {
       innerIOUtils = testIOUtils
+      testIOUtils.enter()
       op
     } finally {
+      testIOUtils.exit()
       innerIOUtils = prevIOUtils
     }
     testIOUtils
   }
+
+  def withTestIOUtils(
+      gameJarPathFromGameDirPath: Path)(op: => Any): outerspace.TestIOUtils =
+    withTestIOUtils(Paths.get(""), gameJarPathFromGameDirPath)(op)
 
   def withTestIOUtils(op: => Any): outerspace.TestIOUtils =
     withTestIOUtils(Paths.get("ver1.0.0", "game.jar"))(op)
