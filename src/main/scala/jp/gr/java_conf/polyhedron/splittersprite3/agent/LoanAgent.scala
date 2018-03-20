@@ -46,7 +46,7 @@ object LoanAgent {
   lazy val agents = List(Logger, ThreadPool)
 
   // 戻り値は成功終了か否か
-  private def loan(operation: => Any, agentList: List[LoanAgent]): Boolean =
+  def loan(operation: => Any, agentList: List[LoanAgent]): Boolean =
     synchronized {
       agentList match {
         case head :: tail => head.loan { loan(operation, tail) }

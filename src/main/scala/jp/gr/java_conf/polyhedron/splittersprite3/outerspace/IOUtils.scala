@@ -173,7 +173,8 @@ abstract class IOUtils {
     } else if (isPatchDirectory(jPath) &&
                parsePatchDirectory(jPath)._2 == toVersion) {
       val fromVersion = parsePatchDirectory(jPath)._1
-      val dirIter = Files.newDirectoryStream(gameDirPath).iterator().asScala
+      val stream = Files.newDirectoryStream(gameDirPath)
+      val dirIter = stream.iterator().asScala
 
       // dirIter内のディレクトリからパッチチェーンを探す
       def findAppliedPatchDirList(): List[JPath] = {
@@ -186,7 +187,11 @@ abstract class IOUtils {
         }
       }
 
-      jPath :: findAppliedPatchDirList()
+      try {
+        jPath :: findAppliedPatchDirList()
+      } finally {
+        stream.close()
+      }
     } else {
       throw new IOUtils.InvalidPatchList(jPath)
     }
