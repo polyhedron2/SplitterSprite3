@@ -12,7 +12,8 @@ object Logger extends LoanAgent {
   var logLevel: LogLevel = Info
 
   private def stderr = Atmosphere.ioUtils.stderr
-  private var writerOpt: Option[PrintWriter] = None
+  // dummy PrintWriter
+  private var writer = new PrintWriter(new StringWriter, true)
   private val maxLogFileCount = 10
 
   private def buildWriter(logDirPath: JPath) = {
@@ -47,10 +48,7 @@ object Logger extends LoanAgent {
 
   private def println(message: String) = synchronized {
     stderr.println(message)
-    writerOpt match {
-      case Some(writer) => writer.println(message)
-      case None =>
-    }
+    writer.println(message)
   }
 
   private def showMessage(messageLevel: LogLevel, message: String) {
@@ -82,10 +80,7 @@ object Logger extends LoanAgent {
   private def printStackTrace(ex: Exception) {
     try {
       ex.printStackTrace(stderr)
-      writerOpt match {
-        case Some(writer) => ex.printStackTrace(writer)
-        case None => stderr.println("StackTrace is not logged into log file.")
-      }
+      ex.printStackTrace(writer)
     } catch {
       case e: Exception => e.printStackTrace()
     }
@@ -107,11 +102,16 @@ object Logger extends LoanAgent {
       Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
     Files.createDirectories(logDirPath)
 
-    Files.list(logDirPath).iterator().asScala.toList.sortBy(_.toString)
-      .reverse.zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
-      .foreach(Files.delete)
+    val stream = Files.list(logDirPath)
+    try {
+      stream.iterator().asScala.toList.sortBy(_.toString)
+        .reverse.zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
+        .foreach(Files.delete)
+    } finally {
+      stream.close()
+    }
 
-    writerOpt = Some(buildWriter(logDirPath))
+    writer = buildWriter(logDirPath)
     infoLog("================== SYSTEM PROPERTY ==================")
     showPropertyInfo("java.version")
     showPropertyInfo("java.runtime.version")
@@ -126,7 +126,7 @@ object Logger extends LoanAgent {
     exOpt.foreach { case ex => printStackTrace(
       new Exception("ゲーム実行中にエラーが発生しました。", ex), Fatal) }
     infoLog("Logger is successfully closed.")
-    writerOpt.foreach(_.close())
+    writer.close()
   }
 
   sealed abstract class LogLevel {
