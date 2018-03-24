@@ -12,6 +12,11 @@ object Atmosphere {
   private var innerIOUtils = defaultIOUtils
   def ioUtils: outerspace.IOUtils = innerIOUtils
 
+  private val defaultTimeUtils: outerspace.TimeUtils =
+    new outerspace.ProductionTimeUtils()
+  private var innerTimeUtils = defaultTimeUtils
+  def timeUtils: outerspace.TimeUtils = innerTimeUtils
+
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(
     gameDirPathFromTestDirPath: Path,
@@ -37,4 +42,27 @@ object Atmosphere {
 
   def withTestIOUtils(op: => Any): outerspace.TestIOUtils =
     withTestIOUtils(Paths.get("ver1.0.0", "game.jar"))(op)
+
+  def withTestTimeUtils(
+      currentTimeMillisList: List[Long], timeZoneID: String)(op: => Any):
+      outerspace.TestTimeUtils = {
+    val prevTimeUtils = innerTimeUtils
+    val testTimeUtils = new outerspace.TestTimeUtils(
+      currentTimeMillisList, timeZoneID)
+    try {
+      innerTimeUtils = testTimeUtils
+      op
+    } finally {
+      innerTimeUtils = prevTimeUtils
+      if (!testTimeUtils.currentTimeMillisList.isEmpty) {
+        throw new outerspace.TestTimeUtils.TooManyCurrentMillisException()
+      }
+    }
+    testTimeUtils
+  }
+
+  def withTestTimeUtils(
+      currentTimeMillisList: List[Long])(op: => Any):
+      outerspace.TestTimeUtils =
+    withTestTimeUtils(currentTimeMillisList, "Asia/Tokyo")(op)
 }

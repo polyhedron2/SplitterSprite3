@@ -1,9 +1,7 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import java.io.{PrintWriter, StringWriter}
-import java.nio.file.{Files, Paths, Path => JPath, FileSystems}
-import java.util.{Calendar}
-import scala.collection.JavaConverters._
+import java.nio.file.{Files, Paths, Path => JPath}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 
@@ -18,31 +16,11 @@ object Logger extends LoanAgent {
 
   private def buildWriter(logDirPath: JPath) = {
     val logPath = {
-      val cal = Calendar.getInstance()
-
-      val dayOfWeek = Calendar.DAY_OF_WEEK match {
-        case Calendar.SUNDAY => "SUN"
-        case Calendar.MONDAY => "MON"
-        case Calendar.TUESDAY => "TUE"
-        case Calendar.WEDNESDAY => "WED"
-        case Calendar.THURSDAY => "THU"
-        case Calendar.FRIDAY => "FRI"
-        case Calendar.SATURDAY => "SAT"
-      }
-
       val logFileName = Paths.get(
-        f"${cal.get(Calendar.YEAR)}%04d-" +
-        f"${cal.get(Calendar.MONTH) + 1}%02d-" +
-        f"${cal.get(Calendar.DATE)}%02d_" +
-        s"${dayOfWeek}_" +
-        f"${cal.get(Calendar.HOUR_OF_DAY)}%02d:" +
-        f"${cal.get(Calendar.MINUTE)}%02d:" +
-        f"${cal.get(Calendar.SECOND)}%02d." +
-        f"${cal.get(Calendar.MILLISECOND)}%03d" +
-        s".log")
+        Atmosphere.timeUtils.currentTimeMillisStr.replaceAll(" ", "_") +
+        ".log")
       logDirPath.resolve(logFileName)
     }
-
     new PrintWriter(Files.newBufferedWriter(logPath), true)
   }
 
