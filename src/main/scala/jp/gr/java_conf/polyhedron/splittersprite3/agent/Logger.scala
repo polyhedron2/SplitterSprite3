@@ -102,14 +102,10 @@ object Logger extends LoanAgent {
       Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
     Files.createDirectories(logDirPath)
 
-    val stream = Files.list(logDirPath)
-    try {
-      stream.iterator().asScala.toList.sortBy(_.toString)
-        .reverse.zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
-        .foreach(Files.delete)
-    } finally {
-      stream.close()
-    }
+    // logファイル数がmaxLogFileCountを超えないように古いファイルを消す
+    Atmosphere.ioUtils.childrenList(logDirPath).sortBy(_.toString).reverse
+      .zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
+      .foreach(Files.delete)
 
     writer = buildWriter(logDirPath)
     infoLog("================== SYSTEM PROPERTY ==================")

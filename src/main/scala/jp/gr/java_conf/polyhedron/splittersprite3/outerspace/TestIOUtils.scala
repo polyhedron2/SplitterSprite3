@@ -21,25 +21,9 @@ class TestIOUtils(
 
   def exit() {
     def recursiveDelete(path: JPath) {
-      if (Files.isDirectory(path)) {
-        val stream = Files.newDirectoryStream(path)
-        val pathIter = stream.iterator().asScala
-        try {
-          iterateDelete(pathIter)
-        } finally {
-          stream.close()
-        }
-      }
+      childrenList(path).foreach(recursiveDelete)
       Files.delete(path)
     }
-
-    def iterateDelete(pathIter: Iterator[JPath]) {
-      if (pathIter.hasNext) {
-        recursiveDelete(pathIter.next)
-        iterateDelete(pathIter)
-      }
-    }
-
     recursiveDelete(testDirPath)
   }
 

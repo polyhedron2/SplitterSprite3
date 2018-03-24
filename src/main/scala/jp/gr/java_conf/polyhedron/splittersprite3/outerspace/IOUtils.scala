@@ -68,6 +68,13 @@ abstract class IOUtils {
 
   def hasZenkaku(str: String): Boolean = str.length != str.getBytes().length
 
+  def childrenList(jPath: JPath): List[JPath] = {
+    if (Files.isDirectory(jPath)) {
+      val stream = Files.newDirectoryStream(jPath)
+      try { stream.iterator().asScala.toList } finally { stream.close() }
+    } else { Nil }
+  }
+
   // "verA.B.C"を(A, B, C)の整数３つ組にパース
   def parseVersionName(name: String): (Int, Int, Int) = {
     if (hasZenkaku(name) || !name.startsWith("ver")) {
@@ -173,25 +180,22 @@ abstract class IOUtils {
     } else if (isPatchDirectory(jPath) &&
                parsePatchDirectory(jPath)._2 == toVersion) {
       val fromVersion = parsePatchDirectory(jPath)._1
-      val stream = Files.newDirectoryStream(gameDirPath)
-      val dirIter = stream.iterator().asScala
 
-      // dirIter内のディレクトリからパッチチェーンを探す
-      def findAppliedPatchDirList(): List[JPath] = {
-        if (!dirIter.hasNext) { throw new IOUtils.InvalidPatchList(jPath) }
-        try {
-          appliedPatchDirList(dirIter.next, fromVersion)
-        } catch {
-          // 試したディレクトリで失敗したら次のディレクトリに進む
-          case e: IOUtils.InvalidPatchList => findAppliedPatchDirList()
+      val dirList = childrenList(gameDirPath)
+
+      // dirList内のディレクトリからパッチチェーンを探す
+      def findAppliedPatchDirList(dirList: List[JPath]): List[JPath] =
+        dirList match {
+          case head :: tail => try {
+            appliedPatchDirList(head, fromVersion)
+          } catch {
+            // 試したディレクトリで失敗したら次のディレクトリに進む
+            case e: IOUtils.InvalidPatchList => findAppliedPatchDirList(tail)
+          }
+          case Nil => throw new IOUtils.InvalidPatchList(jPath)
         }
-      }
 
-      try {
-        jPath :: findAppliedPatchDirList()
-      } finally {
-        stream.close()
-      }
+      jPath :: findAppliedPatchDirList(dirList)
     } else {
       throw new IOUtils.InvalidPatchList(jPath)
     }
