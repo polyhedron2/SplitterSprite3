@@ -7,14 +7,12 @@ import java.nio.file.{Path, Paths}
 // を管理するシングルトン
 // 内部パスの実体パスへの変換を行う。
 object Atmosphere {
-  private val defaultIOUtils: outerspace.IOUtils =
+  private var innerIOUtils: outerspace.IOUtils =
     new outerspace.ProductionIOUtils()
-  private var innerIOUtils = defaultIOUtils
   def ioUtils: outerspace.IOUtils = innerIOUtils
 
-  private val defaultTimeUtils: outerspace.TimeUtils =
+  private var innerTimeUtils: outerspace.TimeUtils =
     new outerspace.ProductionTimeUtils()
-  private var innerTimeUtils = defaultTimeUtils
   def timeUtils: outerspace.TimeUtils = innerTimeUtils
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
