@@ -45,7 +45,7 @@ object Atmosphere {
 
   def withTestTimeUtils(
       currentTimeMillisList: List[Long], timeZoneID: String)(op: => Any):
-      outerspace.TestTimeUtils = {
+      outerspace.TestTimeUtils = synchronized {
     val prevTimeUtils = innerTimeUtils
     val testTimeUtils = new outerspace.TestTimeUtils(
       currentTimeMillisList, timeZoneID)

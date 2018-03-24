@@ -60,16 +60,5 @@ object LoanAgent {
     }
 
   // 戻り値は成功終了か否か
-  def loan(operation: => Any): Boolean = {
-    try {
-      loan(operation, agents)
-    } catch {
-      // テストのアサーションエラーはそのままthrow
-      case e: TestFailedException => throw e
-      case e: Exception => {
-        e.printStackTrace()
-        false
-      }
-    }
-  }
+  def loan(operation: => Any): Boolean = loan(operation, agents)
 }

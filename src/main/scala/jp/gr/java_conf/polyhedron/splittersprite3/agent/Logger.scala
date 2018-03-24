@@ -12,7 +12,7 @@ object Logger extends LoanAgent {
   private def stderr = Atmosphere.ioUtils.stderr
   // dummy PrintWriter
   private var writer = new PrintWriter(new StringWriter, true)
-  private val maxLogFileCount = 10
+  val maxLogFileCount = 10
 
   private def buildWriter(logDirPath: JPath) = {
     val logPath = {
@@ -55,24 +55,8 @@ object Logger extends LoanAgent {
     ret
   }
 
-  private def printStackTrace(ex: Exception) {
-    try {
-      ex.printStackTrace(stderr)
-      ex.printStackTrace(writer)
-    } catch {
-      case e: Exception => e.printStackTrace()
-    }
-  }
-
   def printStackTrace(ex: Exception, messageLevel: LogLevel) {
-    try {
-      stackTraceLines(ex).foreach(showMessage(messageLevel, _))
-    } catch {
-      case e: Exception => {
-        printStackTrace(ex)
-        printStackTrace(e)
-      }
-    }
+    stackTraceLines(ex).foreach(showMessage(messageLevel, _))
   }
 
   override def enter() {
@@ -106,9 +90,6 @@ object Logger extends LoanAgent {
   sealed abstract class LogLevel {
     val level: Int
     val name: String
-    def <(that: LogLevel): Boolean = this.level < that.level
-    def <=(that: LogLevel): Boolean = this.level <= that.level
-    def >(that: LogLevel): Boolean = this.level > that.level
     def >=(that: LogLevel): Boolean = this.level >= that.level
   }
 
