@@ -1,9 +1,11 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
-import org.scalatest.exceptions.TestFailedException
+import org.scalatest.exceptions.{TestFailedException}
 
 class AgentDoublyUsed(a: LoanAgent)
   extends Exception(s"エージェント${a}が多重に起動されました。")
+
+trait LoanAgentGoingThroughException
 
 //開始処理と終了処理を定めるシングルトン用のトレイト
 trait LoanAgent {
@@ -30,6 +32,7 @@ trait LoanAgent {
       } catch {
         // テストのアサーションエラーはそのままthrow
         case e: TestFailedException => throw e
+        case e: LoanAgentGoingThroughException => throw e
         case e: Exception => Some(e)
       }
       exit(exOpt)

@@ -2,9 +2,13 @@ package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 import org.joda.time.{DateTimeZone}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.agent
+
 object TestTimeUtils {
-  class TooManyCurrentMillisException() extends Exception()
-  class TooFewCurrentMillisException() extends Exception()
+  class TooManyCurrentTimeMillisException() extends Exception()
+    with agent.LoanAgentGoingThroughException
+  class TooFewCurrentTimeMillisException() extends Exception()
+    with agent.LoanAgentGoingThroughException
 }
 
 class TestTimeUtils(var currentTimeMillisList: List[Long], timeZoneID: String)
@@ -16,6 +20,6 @@ class TestTimeUtils(var currentTimeMillisList: List[Long], timeZoneID: String)
       currentTimeMillisList = tail
       head
     }
-    case Nil => throw new TestTimeUtils.TooFewCurrentMillisException()
+    case Nil => throw new TestTimeUtils.TooFewCurrentTimeMillisException()
   }
 }

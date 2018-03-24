@@ -52,11 +52,11 @@ object Atmosphere {
     try {
       innerTimeUtils = testTimeUtils
       op
+      if (!testTimeUtils.currentTimeMillisList.isEmpty) {
+        throw new outerspace.TestTimeUtils.TooManyCurrentTimeMillisException()
+      }
     } finally {
       innerTimeUtils = prevTimeUtils
-      if (!testTimeUtils.currentTimeMillisList.isEmpty) {
-        throw new outerspace.TestTimeUtils.TooManyCurrentMillisException()
-      }
     }
     testTimeUtils
   }
