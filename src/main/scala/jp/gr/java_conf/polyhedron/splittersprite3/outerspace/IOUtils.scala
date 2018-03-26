@@ -59,9 +59,22 @@ abstract class IOUtils {
   // 実行ファイルのパス
   val gameJarPath: JPath
 
-  def verOrPatchDirPath: JPath = gameJarPath.getParent()
-  def gameDirPath: JPath = verOrPatchDirPath.getParent()
-  def appliedPatchDirList: List[JPath] = appliedPatchDirList(verOrPatchDirPath)
+  lazy val verOrPatchDirPath: JPath = gameJarPath.getParent()
+  lazy val gameDirPath: JPath = verOrPatchDirPath.getParent()
+
+  lazy val version: (Int, Int, Int) =
+    if (isVersionDirectory(verOrPatchDirPath)) {
+      parseVersionDirectory(verOrPatchDirPath)
+    } else if (isPatchDirectory(verOrPatchDirPath)) {
+      parsePatchDirectory(verOrPatchDirPath)._2
+    } else {
+      throw new IOUtils.InvalidPatchList(verOrPatchDirPath)
+    }
+
+  lazy val versionName = s"ver${version._1}.${version._2}.${version._3}"
+
+  lazy val appliedPatchDirList: List[JPath] =
+    appliedPatchDirList(verOrPatchDirPath, version)
 
   def tailNameOf(jPath: JPath): String =
     jPath.getName(jPath.getNameCount() - 1).toString
@@ -199,19 +212,6 @@ abstract class IOUtils {
     } else {
       throw new IOUtils.InvalidPatchList(jPath)
     }
-
-  // 指定パスのパッチチェーンを返す
-  private def appliedPatchDirList(jPath: JPath): List[JPath] = {
-    // 必ずつながるバージョンを算出
-    val version = if (isVersionDirectory(jPath)) {
-      parseVersionDirectory(jPath)
-    } else if (isPatchDirectory(jPath)) {
-      parsePatchDirectory(jPath)._2
-    } else {
-      throw new IOUtils.InvalidPatchList(jPath)
-    }
-    appliedPatchDirList(jPath, version)
-  }
 
   def searchPatchedFile(patchablePath: String): JPath = {
     val separator = FileSystems.getDefault().getSeparator()
