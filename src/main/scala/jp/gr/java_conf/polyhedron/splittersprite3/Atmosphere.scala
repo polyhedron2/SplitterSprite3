@@ -15,7 +15,7 @@ object Atmosphere {
     new outerspace.ProductionTimeUtils()
   def timeUtils: outerspace.TimeUtils = innerTimeUtils
 
-  val commandQueue = new outerspace.CommandQueue()
+  val commandRegulator = new outerspace.CommandRegulator()
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(

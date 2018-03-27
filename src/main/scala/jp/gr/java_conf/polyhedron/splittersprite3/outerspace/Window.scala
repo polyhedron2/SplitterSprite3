@@ -33,10 +33,10 @@ class Window(gameName: String, mode: String, val width: Int, val height: Int) {
 
     def keyTyped(e: KeyEvent) { }
     def keyPressed(e: KeyEvent) {
-      Atmosphere.commandQueue.enqueuePress(e.getKeyCode())
+      Atmosphere.commandRegulator.enqueuePress(e.getKeyCode())
     }
     def keyReleased(e: KeyEvent) {
-      Atmosphere.commandQueue.enqueueRelease(e.getKeyCode())
+      Atmosphere.commandRegulator.enqueueRelease(e.getKeyCode())
     }
   }
   panel.setPreferredSize(new Dimension(width, height))
