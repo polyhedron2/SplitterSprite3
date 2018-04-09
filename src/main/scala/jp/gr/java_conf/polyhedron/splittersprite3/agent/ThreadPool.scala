@@ -3,6 +3,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.agent
 import java.lang.{Runnable => JRunnable}
 import java.lang.{Thread => JThread}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
 object ThreadPool extends LoanAgent {
@@ -121,5 +122,29 @@ object ThreadPool extends LoanAgent {
     def exit() { }
     //ループされる処理　戻り値はループを継続するか否か
     def runOnce(): Boolean
+  }
+
+  trait IntervalRunnable extends Runnable {
+    var beforeTime_ms = 0L
+
+    override def enter() {
+      beforeTime_ms = Atmosphere.timeUtils.currentTimeMillis
+    }
+
+    override def runOnce(): Boolean = {
+      val continue = intervalRunOnce()
+      val afterTime_ms = Atmosphere.timeUtils.currentTimeMillis
+      val elapsedTime_ms = afterTime_ms - beforeTime_ms
+      val sleepTime_ms = (intervalTime_ms - elapsedTime_ms) max 0
+      Thread.sleep(sleepTime_ms)
+      beforeTime_ms = Atmosphere.timeUtils.currentTimeMillis
+      continue
+    }
+
+    def intervalTime_ms = 1000 / fps
+
+    //インターバル付きでループされる処理　戻り値はループを継続するか否か
+    def intervalRunOnce(): Boolean
+    def fps: Int
   }
 }

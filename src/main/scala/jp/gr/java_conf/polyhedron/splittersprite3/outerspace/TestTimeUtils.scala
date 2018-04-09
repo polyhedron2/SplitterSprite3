@@ -15,11 +15,13 @@ class TestTimeUtils(var currentTimeMillisList: List[Long], timeZoneID: String)
     extends TimeUtils {
   override val timeZone = DateTimeZone.forID(timeZoneID)
 
-  override def currentTimeMillis: Long = currentTimeMillisList match {
-    case head :: tail => {
-      currentTimeMillisList = tail
-      head
+  override def currentTimeMillis: Long = synchronized {
+    currentTimeMillisList match {
+      case head :: tail => {
+        currentTimeMillisList = tail
+        head
+      }
+      case Nil => throw new TestTimeUtils.TooFewCurrentTimeMillisException()
     }
-    case Nil => throw new TestTimeUtils.TooFewCurrentTimeMillisException()
   }
 }

@@ -2,6 +2,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3
 
 import java.io.{Reader}
 import java.nio.file.{Path, Paths}
+import javafx.scene.canvas.{GraphicsContext}
 
 // ゲームのすべての入出力（プレイヤーの操作、ファイル読み書き、乱数、時刻）
 // を管理するシングルトン
@@ -15,7 +16,14 @@ object Atmosphere {
     new outerspace.ProductionTimeUtils()
   def timeUtils: outerspace.TimeUtils = innerTimeUtils
 
-  val commandRegulator = new outerspace.CommandRegulator()
+  // ウィンドウごとの名前をキー、CommandRegulatorをバリューとするMap
+  val commandRegulator =
+    new common.Cache[String, outerspace.CommandRegulator] {
+      override def valueFor(windowName: String) =
+        new outerspace.CommandRegulator()
+    }
+
+  val graphicsContext = new common.SynchronizedMap[String, GraphicsContext]()
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(

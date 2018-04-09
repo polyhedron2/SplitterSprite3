@@ -1,6 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
-import java.awt.event.{KeyEvent}
+import javafx.scene.input.{KeyEvent}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
@@ -18,7 +18,6 @@ import jp.gr.java_conf.polyhedron.splittersprite3.common
 //   4. 同一フレーム内の異なるキー間の押し・放しの順序は保持されない
 //     例：'A'「押し」=>'B'「押し」=>'A'「放し」=>'B'「放し」の入力があれば、
 //         'A'と'B'の間の前後関係は考慮されない
-//   5. shift, ctrl, altの押し・放しは他のキーよりも先に実行された扱いとなる
 class CommandRegulator() {
   // キーが押されているか否かが１フレーム中にどのように切り替わったか
   abstract class InnerKeyCommand {
@@ -33,107 +32,78 @@ class CommandRegulator() {
   }
 
   // 前フレームから放しっぱなし
-  case class AlreadyReleased(keyCode: Int) extends InnerKeyCommand {
-    def pressed: InnerKeyCommand = Pressed(keyCode)
+  case class AlreadyReleased(text: String) extends InnerKeyCommand {
+    def pressed: InnerKeyCommand = Pressed(text)
     def released: InnerKeyCommand = this
     def isPressed: Boolean = false
     def actualCommandList: List[common.Command] = List()
   }
   // このフレームでキーを押した
-  case class Pressed(keyCode: Int) extends InnerKeyCommand {
+  case class Pressed(text: String) extends InnerKeyCommand {
     def pressed: InnerKeyCommand = this
-    def released: InnerKeyCommand = PressedAndReleased(keyCode)
+    def released: InnerKeyCommand = PressedAndReleased(text)
     def isPressed: Boolean = true
-    def actualCommandList: List[common.Command] = List(
-      common.KeyPress(keyCode, shiftIsPressed, ctrlIsPressed, altIsPressed))
+    def actualCommandList: List[common.Command] =
+      List(common.KeyPress(text))
   }
   // このフレームでキーを押して放した
-  case class PressedAndReleased(keyCode: Int) extends InnerKeyCommand {
+  case class PressedAndReleased(text: String) extends InnerKeyCommand {
     // １フレーム内で同一キーを押して放して押すのは１回押した扱い
-    def pressed: InnerKeyCommand = Pressed(keyCode)
+    def pressed: InnerKeyCommand = Pressed(text)
     def released: InnerKeyCommand = this
     def isPressed: Boolean = false
-    def actualCommandList: List[common.Command] = List(
-      common.KeyPress(keyCode, shiftIsPressed, ctrlIsPressed, altIsPressed),
-      common.KeyRelease(keyCode))
+    def actualCommandList: List[common.Command] =
+      List(common.KeyPress(text), common.KeyRelease(text))
   }
   // 前フレームから押しっぱなし
-  case class AlreadyPressed(keyCode: Int) extends InnerKeyCommand {
+  case class AlreadyPressed(text: String) extends InnerKeyCommand {
     def pressed: InnerKeyCommand = this
-    def released: InnerKeyCommand = Released(keyCode)
+    def released: InnerKeyCommand = Released(text)
     def isPressed: Boolean = true
     def actualCommandList: List[common.Command] = List()
   }
   // このフレームで放した
-  case class Released(keyCode: Int) extends InnerKeyCommand {
-    def pressed: InnerKeyCommand = ReleasedAndPressed(keyCode)
+  case class Released(text: String) extends InnerKeyCommand {
+    def pressed: InnerKeyCommand = ReleasedAndPressed(text)
     def released: InnerKeyCommand = this
     def isPressed: Boolean = false
     def actualCommandList: List[common.Command] = List(
-      common.KeyRelease(keyCode))
+      common.KeyRelease(text))
   }
   // このフレームで放して押した
-  case class ReleasedAndPressed(keyCode: Int) extends InnerKeyCommand {
+  case class ReleasedAndPressed(text: String) extends InnerKeyCommand {
     def pressed: InnerKeyCommand = this
     // １フレーム内で同一キーを放して押して放すのは１回放した扱い
-    def released: InnerKeyCommand = Released(keyCode)
+    def released: InnerKeyCommand = Released(text)
     def isPressed: Boolean = true
-    def actualCommandList: List[common.Command] = List(
-      common.KeyRelease(keyCode),
-      common.KeyPress(keyCode, shiftIsPressed, ctrlIsPressed, altIsPressed))
+    def actualCommandList: List[common.Command] =
+      List(common.KeyRelease(text), common.KeyPress(text))
   }
 
-  private var keyCodeCommandMap =
-    Map[Int, InnerKeyCommand]().withDefault(AlreadyReleased)
+  private var commandMap =
+    Map[String, InnerKeyCommand]().withDefault(AlreadyReleased)
 
-  private var shiftIsPressed = false
-  private var ctrlIsPressed = false
-  private var altIsPressed = false
-
-  def enqueuePress(keyCode: Int) {
+  def enqueuePress(e: KeyEvent) {
     synchronized {
-      if (keyCode == KeyEvent.VK_SHIFT) {
-        // shiftの押しは先に実行
-        shiftIsPressed = true
-      } else if (keyCode == KeyEvent.VK_CONTROL) {
-        // ctrlの押しは先に実行
-        ctrlIsPressed = true
-      } else if (keyCode == KeyEvent.VK_ALT) {
-        // altの押しは先に実行
-        altIsPressed = true
-      } else {
-        keyCodeCommandMap += keyCode -> keyCodeCommandMap(keyCode).pressed
-      }
+      commandMap += e.getText() -> commandMap(e.getText()).pressed
     }
   }
 
-  def enqueueRelease(keyCode: Int) {
+  def enqueueRelease(e: KeyEvent) {
     synchronized {
-      if (keyCode == KeyEvent.VK_SHIFT) {
-        // shiftの放しは先に実行
-        shiftIsPressed = false
-      } else if (keyCode == KeyEvent.VK_CONTROL) {
-        // ctrlの放しは先に実行
-        ctrlIsPressed = false
-      } else if (keyCode == KeyEvent.VK_ALT) {
-        // altの放しは先に実行
-        altIsPressed = false
-      } else {
-        keyCodeCommandMap += keyCode -> keyCodeCommandMap(keyCode).released
-      }
+      commandMap += e.getText() -> commandMap(e.getText()).released
     }
   }
 
   def dequeue(): List[common.Command] = {
     synchronized {
-      // keyCode順にactualCommandListを連結したものが、戻り値
-      val ret =
-        keyCodeCommandMap.toList.sortBy(_._1).flatMap(_._2.actualCommandList)
-      keyCodeCommandMap =
+      // keyText順にactualCommandListを連結したものが、戻り値
+      val ret = commandMap.toList.sortBy(_._1).flatMap(_._2.actualCommandList)
+      commandMap =
         // 押されたままのキーのみを残す
-        keyCodeCommandMap.toSeq.filter(_._2.isPressed).map(_._1)
+        commandMap.toSeq.filter(_._2.isPressed).map(_._1)
           // それらにAlreadyPressedを割り当て
-          .map(keyCode => (keyCode, AlreadyPressed(keyCode))).toMap
+          .map(text => (text, AlreadyPressed(text))).toMap
           // 残りのキーはAlreadyReleased
           .withDefault(AlreadyReleased)
       ret
