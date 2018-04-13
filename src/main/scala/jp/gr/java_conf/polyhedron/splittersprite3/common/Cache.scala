@@ -29,4 +29,6 @@ trait Cache[KEY, VALUE] {
 
   // 評価内容を定義するメソッド
   protected def valueFor(key: KEY): VALUE
+
+  def keys: Iterable[KEY] = body.keys
 }

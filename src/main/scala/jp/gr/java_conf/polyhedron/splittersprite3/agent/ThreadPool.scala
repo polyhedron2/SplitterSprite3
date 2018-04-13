@@ -135,13 +135,12 @@ object ThreadPool extends LoanAgent {
       val continue = intervalRunOnce()
       val afterTime_ms = Atmosphere.timeUtils.currentTimeMillis
       val elapsedTime_ms = afterTime_ms - beforeTime_ms
+      val intervalTime_ms = 1000 / fps
       val sleepTime_ms = (intervalTime_ms - elapsedTime_ms) max 0
       Thread.sleep(sleepTime_ms)
       beforeTime_ms = Atmosphere.timeUtils.currentTimeMillis
       continue
     }
-
-    def intervalTime_ms = 1000 / fps
 
     //インターバル付きでループされる処理　戻り値はループを継続するか否か
     def intervalRunOnce(): Boolean
