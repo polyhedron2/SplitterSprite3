@@ -2,19 +2,21 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 import scala.xml.{Elem, XML}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
 // 最も外側のXMLを読み書きするRealSpirit
 // １XMLに対してOutermostRealSpiritは１インスタンス
-class OutermostRealSpirit(path: common.Path) extends RealSpirit {
+// patchablePath: 内部パス、ファイル区切り文字は'/'で統一
+class OutermostRealSpirit(val patchablePath: String) extends RealSpirit {
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = this
-  val patchablePath = path.patchablePath
 
   // XMLの編集履歴
   var historyIndex = 0
-  var xmlHistory = Map(0 -> path.withReader(XML.load))
+  var xmlHistory = Map(
+    0 -> Atmosphere.ioUtils.withPatchedReader(patchablePath)(XML.load))
 
   def xml: Elem = xmlHistory(historyIndex)
 

@@ -27,13 +27,12 @@ import scala.collection.JavaConverters._
 //   game.bat (バージョンディレクトリもしくはパッチディレクトリから
 //             最新のゲーム実行ファイルを探し、実行するバッチファイル)
 //
-// Pathクラスはバージョンディレクトリもしくはパッチディレクトリを起点とした
-// 相対パスを扱うものである。この相対パスを内部パス(internal path)と呼ぶ。
-// 上記の例ではPath("aaa.xml")はgame/ver1.0.0/aaa.xmlのみを、
-// Path("foo/bbb.xml")はgame/ver1.0.0/foo/bbb.xmlと
+// patchablePathはバージョンディレクトリもしくはパッチディレクトリを起点とした
+// 相対パスである。 上記の例では"aaa.xml"はgame/ver1.0.0/aaa.xmlのみを、
+// "foo/bbb.xml"はgame/ver1.0.0/foo/bbb.xmlと
 // game/patch_from_ver1.0.0_to_ver1.0.1/foo/bbb.xmlを、
-// Path("bar/ccc.xml")はgame/ver1.0.0/bar/ccc.xmlと
-// game/patch_from_ver1.0.1_to_ver1.1.0/bar/ccc.xmlを表す。
+// "bar/ccc.xml"はgame/ver1.0.0/bar/ccc.xmlと
+// game/patch_from_ver1.0.1_to_ver1.1.0/bar/ccc.xmlを表すpatchablePathである。
 //
 // SpawnerがXMLを読み込む際には最新のバージョンディレクトリもしくは
 // パッチディレクトリのXML読み込む。これにより、パッチディレクトリを
