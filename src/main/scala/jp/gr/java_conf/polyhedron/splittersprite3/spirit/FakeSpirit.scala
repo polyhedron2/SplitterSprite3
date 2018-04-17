@@ -9,11 +9,11 @@ class FakeSpirit extends Spirit {
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, agent.Specificator.Spec]()
 
-  val stringOf = new FakeAccessor("this is dummy string.",
-                                  agent.Specificator.StringSpec)
-  val booleanOf = new FakeAccessor(false, agent.Specificator.BooleanSpec)
-  val intOf = new FakeAccessor(1, agent.Specificator.IntSpec)
-  val doubleOf = new FakeAccessor(1.0, agent.Specificator.DoubleSpec)
+  val string = new FakeAccessor("this is dummy string.",
+                                agent.Specificator.StringSpec)
+  val boolean = new FakeAccessor(false, agent.Specificator.BooleanSpec)
+  val int = new FakeAccessor(1, agent.Specificator.IntSpec)
+  val double = new FakeAccessor(1.0, agent.Specificator.DoubleSpec)
 
   // 読み書きメソッドの呼び出しをマップに記録するフェイクアクセサ
   // dummyDefaultValue: 読み出しを受けた際のダミー値

@@ -47,22 +47,22 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  val stringOf = new RealAccessor[String] {
+  val string = new RealAccessor[String] {
     def rawValue2Value(rawValue: String) = rawValue
     def value2RawValue(value: String) = value
   }
 
-  val booleanOf = new RealAccessor[Boolean] {
+  val boolean = new RealAccessor[Boolean] {
     def rawValue2Value(rawValue: String) = rawValue.toBoolean
     def value2RawValue(value: Boolean) = value.toString
   }
 
-  val intOf = new RealAccessor[Int] {
+  val int = new RealAccessor[Int] {
     def rawValue2Value(rawValue: String) = rawValue.toInt
     def value2RawValue(value: Int) = value.toString
   }
 
-  val doubleOf = new RealAccessor[Double] {
+  val double = new RealAccessor[Double] {
     def rawValue2Value(rawValue: String) = rawValue.toDouble
     def value2RawValue(value: Double) = value.toString
   }

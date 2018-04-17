@@ -10,22 +10,22 @@ abstract class Spirit {
 
   // 各リテラル用のアクセサ
   // 例：
-  // spirit.stringOf("ほげ")
+  // spirit.string("ほげ")
   // は以下のXMLを定める。「????」は適当な値。
   // <root>
   //   <val field="ほげ">????</val>
   // </root>
   //
   // 値の取得
-  // val str = spirit.stringOf("ほげ")
+  // val str = spirit.string("ほげ")
   // 値の取得(値未設定時のデフォルト値指定)
-  // val str = spirit.stringOf("ほげ", "ABC")
+  // val str = spirit.string("ほげ", "ABC")
   // 値の格納
-  // spirit.stringOf("ほげ") = "ABC"
-  val stringOf: Accessor[String]
-  val booleanOf: Accessor[Boolean]
-  val intOf: Accessor[Int]
-  val doubleOf: Accessor[Double]
+  // spirit.string("ほげ") = "ABC"
+  val string: Accessor[String]
+  val boolean: Accessor[Boolean]
+  val int: Accessor[Int]
+  val double: Accessor[Double]
 
   abstract class Accessor[VALUE] {
     def apply(field: String): VALUE
@@ -35,7 +35,7 @@ abstract class Spirit {
 
   // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。
   // 例：
-  // spirit("ほげ").stringOf("ふが")
+  // spirit("ほげ").string("ふが")
   // は以下のXMLを定める。「????」は適当な値。
   // <root>
   //   <inner field="ほげ">
