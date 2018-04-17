@@ -47,27 +47,27 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  val string = new RealAccessor[String] {
+  val string = new RealValueAccessor[String] {
     def rawValue2Value(rawValue: String) = rawValue
     def value2RawValue(value: String) = value
   }
 
-  val boolean = new RealAccessor[Boolean] {
+  val boolean = new RealValueAccessor[Boolean] {
     def rawValue2Value(rawValue: String) = rawValue.toBoolean
     def value2RawValue(value: Boolean) = value.toString
   }
 
-  val int = new RealAccessor[Int] {
+  val int = new RealValueAccessor[Int] {
     def rawValue2Value(rawValue: String) = rawValue.toInt
     def value2RawValue(value: Int) = value.toString
   }
 
-  val double = new RealAccessor[Double] {
+  val double = new RealValueAccessor[Double] {
     def rawValue2Value(rawValue: String) = rawValue.toDouble
     def value2RawValue(value: Double) = value.toString
   }
 
-  abstract class RealAccessor[VALUE] extends Accessor[VALUE] {
+  abstract class RealValueAccessor[VALUE] extends ValueAccessor[VALUE] {
     // XML上の文字列から指定のリテラルに変換
     def rawValue2Value(rawValue: String): VALUE
     // 指定のリテラルから文字列に変換

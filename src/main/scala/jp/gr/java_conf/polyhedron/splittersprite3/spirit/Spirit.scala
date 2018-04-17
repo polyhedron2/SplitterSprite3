@@ -22,12 +22,12 @@ abstract class Spirit {
   // val str = spirit.string("ほげ", "ABC")
   // 値の格納
   // spirit.string("ほげ") = "ABC"
-  val string: Accessor[String]
-  val boolean: Accessor[Boolean]
-  val int: Accessor[Int]
-  val double: Accessor[Double]
+  val string: ValueAccessor[String]
+  val boolean: ValueAccessor[Boolean]
+  val int: ValueAccessor[Int]
+  val double: ValueAccessor[Double]
 
-  abstract class Accessor[VALUE] {
+  abstract class ValueAccessor[VALUE] {
     def apply(field: String): VALUE
     def apply(field: String, default: VALUE): VALUE
     def update(field: String, value: VALUE): Unit
