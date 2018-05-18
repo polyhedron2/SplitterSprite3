@@ -109,7 +109,7 @@ abstract class RealSpirit extends Spirit {
       lock.synchronized {
         try {
           rawValueOpt(field).map(resolveRelativePath).map(
-            new OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
+            OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
         } catch {
           // 文字列をSpawnerに変換できなかった場合
           case e: Exception =>

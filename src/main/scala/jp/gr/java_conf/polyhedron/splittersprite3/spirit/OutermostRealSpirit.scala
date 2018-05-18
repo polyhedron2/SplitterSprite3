@@ -5,10 +5,19 @@ import scala.xml.{Elem, XML}
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
+object OutermostRealSpirit {
+  private val body = new common.Cache[String, OutermostRealSpirit] {
+    def calc(patchablePath: String) = new OutermostRealSpirit(patchablePath)
+  }
+
+  def apply(patchablePath: String) = body(patchablePath)
+}
+
 // 最も外側のXMLを読み書きするRealSpirit
 // １XMLに対してOutermostRealSpiritは１インスタンス
 // patchablePath: 内部パス、ファイル区切り文字は'/'で統一
-class OutermostRealSpirit(val patchablePath: String) extends RealSpirit {
+class OutermostRealSpirit private (
+    val patchablePath: String) extends RealSpirit {
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = this
