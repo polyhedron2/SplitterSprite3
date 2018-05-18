@@ -24,10 +24,14 @@ class Main() extends Application {
   def start(primaryStage: Stage) {
     agent.LoanAgent.loan {
       enter(primaryStage)
+      val spawner = spirit.OutermostRealSpirit(
+        "main.xml").spawner.asInstanceOf[vanilla.ControllerSpawner]
+      val controller = spawner.spawn(())
       agent.ThreadPool.startAndGetHalter(
         new agent.ThreadPool.IntervalRunnable {
           override def fps = 60
           override def intervalRunOnce() = {
+            controller.update()
             true
           }
         })
