@@ -1,10 +1,14 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import jp.gr.java_conf.polyhedron.splittersprite3.common
+import scala.reflect.{ClassTag}
+
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
+import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
+  Spawner, OutermostSpawner}
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス
-class FakeSpirit extends Spirit {
+class FakeSpirit() extends Spirit {
   val patchablePath = s"bogus/${this.toString}.xml"
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, agent.Specificator.Spec]()
@@ -35,6 +39,28 @@ class FakeSpirit extends Spirit {
       apply(field, Some(default))
     def update(field: String, value: VALUE): Unit =
       dummyValueMap += (field -> value)
+  }
+
+  val outermostSpawner = new OutermostSpawnerAccessor {
+    // 書き込まれた値を保持するマップ
+    private var dummyValueMap =
+      new common.Cache[
+          (String, Class[_ <: OutermostSpawner[Any]]),
+          OutermostSpawner[Any]] {
+        def valueFor(key: (String, Class[_ <: OutermostSpawner[Any]])) =
+          Spawner.rawFakeSpawner(key._2).asInstanceOf[OutermostSpawner[Any]]
+      }
+
+    def apply[T <: OutermostSpawner[Any]: ClassTag](field: String) = {
+      val spawnerCls = common.Reflector.typeOf[T]
+      specMap += (field -> agent.Specificator.OutermostSpawnerSpec(spawnerCls))
+      dummyValueMap(field, spawnerCls).asInstanceOf[T]
+    }
+
+    def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
+      val spawnerCls = common.Reflector.typeOf[T]
+      dummyValueMap((field, spawnerCls)) = value
+    }
   }
 
   // フェイクのInnerSpirit一覧管理用

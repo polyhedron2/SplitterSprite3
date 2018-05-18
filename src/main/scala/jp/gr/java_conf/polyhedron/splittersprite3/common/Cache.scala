@@ -27,6 +27,10 @@ trait Cache[KEY, VALUE] {
     body(key)
   }
 
+  def update(key: KEY, value: VALUE): Unit = synchronized {
+    body += (key -> value)
+  }
+
   // 評価内容を定義するメソッド
   protected def valueFor(key: KEY): VALUE
 

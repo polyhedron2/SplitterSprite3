@@ -1,9 +1,12 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
+import java.nio.file.{Paths}
+import scala.reflect.{ClassTag}
 import scala.xml.{Node}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
-import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
+  Spawner, OutermostSpawner}
 
 class SpiritValueIsNotFound(patchablePath: String, field: String)
   extends Exception(s"${patchablePath}[${field}]の値が見つかりません。")
@@ -94,6 +97,30 @@ abstract class RealSpirit extends Spirit {
     }
 
     def update(field: String, value: VALUE) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
+  }
+
+  def resolveRelativePath(relativePath: String): String =
+    Paths.get(patchablePath).resolve(relativePath).normalize.toString
+
+  val outermostSpawner = new OutermostSpawnerAccessor {
+    def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
+      lock.synchronized {
+        try {
+          rawValueOpt(field).map(resolveRelativePath).map(
+            new OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
+        } catch {
+          // 文字列をSpawnerに変換できなかった場合
+          case e: Exception =>
+            throw new SpiritValueIsInvalid(patchablePath, field, e)
+        }
+      } getOrElse {
+        // 文字列が設定されていなかった場合
+        throw new SpiritValueIsNotFound(patchablePath, field)
+      }
+
+    def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
       throw new UnsupportedOperationException("TODO: 実装")
     }
   }

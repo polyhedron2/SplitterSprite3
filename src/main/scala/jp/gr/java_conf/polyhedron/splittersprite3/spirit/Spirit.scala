@@ -1,5 +1,11 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
+import scala.reflect.{ClassTag}
+
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
+  OutermostSpawner
+}
+
 // XMLファイルへの読み書きを定める抽象クラス
 abstract class Spirit {
   // ゲームフォルダ内の相対ファイルパス。区切り文字は'/'で統一。
@@ -31,6 +37,13 @@ abstract class Spirit {
     def apply(field: String): VALUE
     def apply(field: String, default: VALUE): VALUE
     def update(field: String, value: VALUE): Unit
+  }
+
+  val outermostSpawner: OutermostSpawnerAccessor
+
+  abstract class OutermostSpawnerAccessor {
+    def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T
+    def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T)
   }
 
   // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。

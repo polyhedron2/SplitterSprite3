@@ -1,7 +1,8 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
-import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
+  Spawner, OutermostSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 class FailureToSpawnFakeInstance(
@@ -25,7 +26,7 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
     }
 
     // spawnを実行
-    spawner.fake
+    spawner.spawn(spawner.fakeArgs)
     // フィールド・型情報を覚えたFakeSpiritを返す
     spirit
   }
@@ -36,4 +37,6 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
   case class BooleanSpec(defaultOpt: Option[Boolean]) extends Spec
   case class IntSpec(defaultOpt: Option[Int]) extends Spec
   case class DoubleSpec(defaultOpt: Option[Double]) extends Spec
+  case class OutermostSpawnerSpec(
+    spawnerCls: Class[_ <: OutermostSpawner[Any]]) extends Spec
 }

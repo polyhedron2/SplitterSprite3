@@ -1,6 +1,12 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spawner
 
-import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit}
+import scala.reflect.{ClassTag}
+
+import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
+import jp.gr.java_conf.polyhedron.splittersprite3.common
+
+class NoConcreteSpawnerClassException(cls: Class[_ <: Spawner[Any]])
+  extends Exception(s"${cls.getName()}に具象クラスの実装が必要です。")
 
 // XMLファイルを基にインスタンスを生成するトレイト
 sealed trait Spawner[+T] {
@@ -18,8 +24,17 @@ sealed trait Spawner[+T] {
 
   // XMLから読み出すフィールド名・型を取り出すためのフェイク実行用の引数
   def fakeArgs: SpawnArgs
-  // XMLから読み出すフィールド名・型を取り出すためのフェイク実行
-  lazy val fake = spawn(fakeArgs)
+}
+
+object Spawner {
+  def rawFakeSpawner(spawnerCls: Class[_ <: Spawner[Any]]): Spawner[Any] =
+    common.Reflector.concreteSubClassList(spawnerCls).headOption.getOrElse {
+      throw new NoConcreteSpawnerClassException(spawnerCls)
+    }.getConstructor(
+      classOf[Spirit]).newInstance(new FakeSpirit()).asInstanceOf[Spawner[Any]]
+
+  def fakeSpawner[T <: Spawner[Any]: ClassTag]: T =
+    rawFakeSpawner(common.Reflector.typeOf[T]).asInstanceOf[T]
 }
 
 // OutermostRealSpirit用のSpawner
