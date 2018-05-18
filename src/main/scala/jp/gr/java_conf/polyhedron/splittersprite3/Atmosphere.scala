@@ -19,7 +19,7 @@ object Atmosphere {
   // ウィンドウごとの名前をキー、CommandRegulatorをバリューとするMap
   val commandRegulator =
     new common.Cache[String, outerspace.CommandRegulator] {
-      override def valueFor(windowName: String) =
+      override def calc(windowName: String) =
         new outerspace.CommandRegulator()
     }
 

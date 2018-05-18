@@ -17,7 +17,7 @@ trait Cache[KEY, VALUE] {
     if (!body.isDefinedAt(key)) {
       try {
         processing += key
-        body += (key -> valueFor(key))
+        body += (key -> calc(key))
       } finally {
         processing -= key
       }
@@ -32,7 +32,7 @@ trait Cache[KEY, VALUE] {
   }
 
   // 評価内容を定義するメソッド
-  protected def valueFor(key: KEY): VALUE
+  protected def calc(key: KEY): VALUE
 
   def keys: Iterable[KEY] = body.keys
 }

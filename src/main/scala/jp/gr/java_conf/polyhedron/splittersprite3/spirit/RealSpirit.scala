@@ -127,7 +127,7 @@ abstract class RealSpirit extends Spirit {
 
   // InnerSpirit一覧管理用
   val innerSpiritMap = new common.Cache[String, InnerRealSpirit] {
-    def valueFor(field: String) = new InnerRealSpirit(RealSpirit.this, field)
+    def calc(field: String) = new InnerRealSpirit(RealSpirit.this, field)
   }
   def apply(field: String): RealSpirit = innerSpiritMap(field)
 }

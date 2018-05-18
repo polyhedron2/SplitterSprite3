@@ -47,7 +47,7 @@ class FakeSpirit() extends Spirit {
       new common.Cache[
           (String, Class[_ <: OutermostSpawner[Any]]),
           OutermostSpawner[Any]] {
-        def valueFor(key: (String, Class[_ <: OutermostSpawner[Any]])) =
+        def calc(key: (String, Class[_ <: OutermostSpawner[Any]])) =
           Spawner.rawFakeSpawner(key._2).asInstanceOf[OutermostSpawner[Any]]
       }
 
@@ -65,7 +65,7 @@ class FakeSpirit() extends Spirit {
 
   // フェイクのInnerSpirit一覧管理用
   val innerSpiritMap = new common.Cache[String, FakeSpirit] {
-    def valueFor(field: String) = new FakeSpirit()
+    def calc(field: String) = new FakeSpirit()
   }
   def apply(field: String): FakeSpirit = innerSpiritMap(field)
 
