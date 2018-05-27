@@ -16,6 +16,10 @@ object Atmosphere {
     new outerspace.ProductionTimeUtils()
   def timeUtils: outerspace.TimeUtils = innerTimeUtils
 
+  private var innerReflectionUtils: outerspace.ReflectionUtils =
+    new outerspace.ProductionReflectionUtils()
+  def reflectionUtils: outerspace.ReflectionUtils = innerReflectionUtils
+
   // ウィンドウごとの名前をキー、CommandRegulatorをバリューとするMap
   val commandRegulator =
     new common.Cache[String, outerspace.CommandRegulator] {
@@ -73,4 +77,18 @@ object Atmosphere {
       currentTimeMillisList: List[Long])(op: => Any):
       outerspace.TestTimeUtils =
     withTestTimeUtils(currentTimeMillisList, "Asia/Tokyo")(op)
+
+  // TestReflectionUtilsを用いて処理を実行し、戻り値として返す
+  def withTestReflectionUtils(classIterator: Iterator[Class[_]])(op: => Any):
+      outerspace.TestReflectionUtils = synchronized {
+    val prevReflectionUtils = innerReflectionUtils
+    val testReflectionUtils = new outerspace.TestReflectionUtils(classIterator)
+    try {
+      innerReflectionUtils = testReflectionUtils
+      op
+    } finally {
+      innerReflectionUtils = prevReflectionUtils
+    }
+    testReflectionUtils
+  }
 }

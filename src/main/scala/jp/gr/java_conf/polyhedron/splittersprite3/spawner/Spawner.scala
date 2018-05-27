@@ -2,8 +2,9 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spawner
 
 import scala.reflect.{ClassTag}
 
-import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 class NoConcreteSpawnerClassException(cls: Class[_ <: Spawner[Any]])
   extends Exception(s"${cls.getName()}に具象クラスの実装が必要です。")
@@ -28,13 +29,14 @@ sealed trait Spawner[+T] {
 
 object Spawner {
   def rawFakeSpawner(spawnerCls: Class[_ <: Spawner[Any]]): Spawner[Any] =
-    common.Reflector.concreteSubClassList(spawnerCls).headOption.getOrElse {
+    Atmosphere.reflectionUtils.concreteSubClassList(
+        spawnerCls).headOption.getOrElse {
       throw new NoConcreteSpawnerClassException(spawnerCls)
     }.getConstructor(
       classOf[Spirit]).newInstance(new FakeSpirit()).asInstanceOf[Spawner[Any]]
 
   def fakeSpawner[T <: Spawner[Any]: ClassTag]: T =
-    rawFakeSpawner(common.Reflector.typeOf[T]).asInstanceOf[T]
+    rawFakeSpawner(Atmosphere.reflectionUtils.typeOf[T]).asInstanceOf[T]
 }
 
 // OutermostRealSpirit用のSpawner

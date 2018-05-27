@@ -3,6 +3,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 import scala.reflect.{ClassTag}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner}
@@ -52,13 +53,13 @@ class FakeSpirit() extends Spirit {
       }
 
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String) = {
-      val spawnerCls = common.Reflector.typeOf[T]
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T]
       specMap += (field -> agent.Specificator.OutermostSpawnerSpec(spawnerCls))
       dummyValueMap(field, spawnerCls).asInstanceOf[T]
     }
 
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
-      val spawnerCls = common.Reflector.typeOf[T]
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T]
       dummyValueMap((field, spawnerCls)) = value
     }
   }
