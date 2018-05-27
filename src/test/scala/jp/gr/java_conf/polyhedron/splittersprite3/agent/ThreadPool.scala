@@ -20,7 +20,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         assert(agent.ThreadPool.size === 0)
         agent.ThreadPool.startAndGetHalter(runnable)
         assert(agent.ThreadPool.size === 1)
@@ -31,7 +31,6 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(agent.ThreadPool.size === 0)
         assert(checked === true)
       }
-      assert(success)
     }
   }
 
@@ -48,7 +47,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         assert(count === 0)
         assert(agent.ThreadPool.size === 0)
         val halt = agent.ThreadPool.startAndGetHalter(runnable)
@@ -69,7 +68,6 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         Thread.sleep(wait_ms * 2)
         assert(count === prevCount)
       }
-      assert(success)
     }
   }
 
@@ -90,10 +88,9 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         agent.ThreadPool.startAndGetHalter(runnable)
       }
-      assert(success)
     }
 
     checkList should be (
@@ -121,10 +118,9 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         agent.ThreadPool.startAndGetHalter(runnable)
       }
-      assert(success)
     }
 
     checkList should be (
@@ -169,14 +165,13 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     Atmosphere.withTestIOUtils {
       val startTime_ns = System.nanoTime()
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         assert(agent.ThreadPool.size === 0)
         agent.ThreadPool.startAndGetHalter(shortRunnable)
         agent.ThreadPool.startAndGetHalter(middleRunnable)
         agent.ThreadPool.startAndGetHalter(longRunnable)
         assert(agent.ThreadPool.size === 3)
       }
-      assert(success)
       val endTime_ns = System.nanoTime()
       assert(endTime_ns - startTime_ns > wait_ns * 15)
       assert(endTime_ns - startTime_ns < wait_ns * 20)
@@ -225,14 +220,13 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     val testIOUtils = Atmosphere.withTestIOUtils {
       val startTime_ns = System.nanoTime()
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         assert(agent.ThreadPool.size === 0)
         agent.ThreadPool.startAndGetHalter(shortRunnable)
         agent.ThreadPool.startAndGetHalter(middleRunnable)
         agent.ThreadPool.startAndGetHalter(longRunnable)
         assert(agent.ThreadPool.size === 3)
       }
-      assert(success)
       val endTime_ns = System.nanoTime()
       assert(endTime_ns - startTime_ns < wait_ns * 10)
       checkSet should be (Set("exitShort", "exitMiddle", "exitLong"))
@@ -260,14 +254,15 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     val testIOUtils = Atmosphere.withTestIOUtils {
       val startTime_ns = System.nanoTime()
-      val success = agent.LoanAgent.loan {
-        assert(agent.ThreadPool.size === 0)
-        agent.ThreadPool.startAndGetHalter(infiniteRunnable)
-        assert(agent.ThreadPool.size === 1)
-        // 例外により終了
-        throw new Exception("this is exception for test.")
+      intercept[Exception] {
+        agent.LoanAgent.loan {
+          assert(agent.ThreadPool.size === 0)
+          agent.ThreadPool.startAndGetHalter(infiniteRunnable)
+          assert(agent.ThreadPool.size === 1)
+          // 例外により終了
+          throw new Exception("this is exception for test.")
+        }
       }
-      assert(!success)
       val endTime_ns = System.nanoTime()
       assert(endTime_ns - startTime_ns < wait_ns * 5)
       checkSet should be (Set("exitInfinite"))
@@ -289,17 +284,18 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     {
       val testIOUtils = Atmosphere.withTestIOUtils {
-        val success = agent.LoanAgent.loan {
-          assert(agent.ThreadPool.size === 0)
-          // ちょうど規定値以内のスレッドを起動
-          (0 until agent.ThreadPool.warnThreadCount).foreach { case _ =>
-            agent.ThreadPool.startAndGetHalter(getRunnable())
+        intercept[Exception] {
+          agent.LoanAgent.loan {
+            assert(agent.ThreadPool.size === 0)
+            // ちょうど規定値以内のスレッドを起動
+            (0 until agent.ThreadPool.warnThreadCount).foreach { case _ =>
+              agent.ThreadPool.startAndGetHalter(getRunnable())
+            }
+            assert(agent.ThreadPool.size === agent.ThreadPool.warnThreadCount)
+            // 例外により強制終了
+            throw new Exception("this is exception for test.")
           }
-          assert(agent.ThreadPool.size === agent.ThreadPool.warnThreadCount)
-          // 例外により強制終了
-          throw new Exception("this is exception for test.")
         }
-        assert(!success)
       }
       val error = testIOUtils.dumpStdErr()
       error should include (
@@ -311,17 +307,19 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     {
       val testIOUtils = Atmosphere.withTestIOUtils {
-        val success = agent.LoanAgent.loan {
-          assert(agent.ThreadPool.size === 0)
-          // ちょうど規定値を超えるスレッドを起動
-          (0 until agent.ThreadPool.warnThreadCount + 1).foreach { case _ =>
-            agent.ThreadPool.startAndGetHalter(getRunnable())
+        intercept[Exception] {
+          agent.LoanAgent.loan {
+            assert(agent.ThreadPool.size === 0)
+            // ちょうど規定値を超えるスレッドを起動
+            (0 until agent.ThreadPool.warnThreadCount + 1).foreach { case _ =>
+              agent.ThreadPool.startAndGetHalter(getRunnable())
+            }
+            assert(
+              agent.ThreadPool.size === agent.ThreadPool.warnThreadCount + 1)
+            // 例外により強制終了
+            throw new Exception("this is exception for test.")
           }
-          assert(agent.ThreadPool.size === agent.ThreadPool.warnThreadCount + 1)
-          // 例外により強制終了
-          throw new Exception("this is exception for test.")
         }
-        assert(!success)
       }
       val error = testIOUtils.dumpStdErr()
       error should include (
@@ -358,7 +356,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         val halter = agent.ThreadPool.startAndGetHalter(runnable)
         Thread.sleep(wait_ms / 2)
         for (expectedCount <- 1 to 10) {
@@ -367,7 +365,6 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         }
         halter()
       }
-      assert(success)
     }
   }
 
@@ -384,7 +381,7 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         val halter = agent.ThreadPool.startAndGetHalter(runnable)
         Thread.sleep(wait_ms)
         for (expectedCount <- 1 to 10) {
@@ -393,7 +390,6 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         }
         halter()
       }
-      assert(success)
     }
   }
 }

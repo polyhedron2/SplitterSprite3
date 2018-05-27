@@ -27,11 +27,10 @@ class SynchronizedMapSpec
     }
 
     Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
+      agent.LoanAgent.loan {
         agent.ThreadPool.startAndGetHalter(runnableX)
         agent.ThreadPool.startAndGetHalter(runnableY)
       }
-      assert(success)
       map.keys.toSet should be (
         (0 until 100).map(n => f"x${n}%02d").toSet ++
         (0 until 100).map(n => f"y${n}%02d").toSet)

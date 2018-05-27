@@ -31,7 +31,7 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           assert(Spawner.rawFakeSpawner(
             classOf[DummySpawner]).isInstanceOf[DummySpawner])
           assert(Spawner.fakeSpawner[DummySpawner].isInstanceOf[DummySpawner])
@@ -60,7 +60,6 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           assert(Spawner.fakeSpawner[
             ConcreteSpawnerXY].isInstanceOf[ConcreteSpawnerXY])
         }
-        assert(success)
       }
     }
   }
@@ -69,7 +68,7 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       Atmosphere.withTestReflectionUtils(Iterator(
           classOf[NotImplementedSpawner])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           intercept[NoConcreteSpawnerClassException] {
             Spawner.rawFakeSpawner(classOf[NotImplementedSpawner])
           }
@@ -77,7 +76,6 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             Spawner.fakeSpawner[NotImplementedSpawner]
           }
         }
-        assert(success)
       }
     }
   }

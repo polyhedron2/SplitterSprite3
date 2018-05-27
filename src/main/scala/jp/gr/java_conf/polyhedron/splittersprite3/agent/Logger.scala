@@ -85,6 +85,7 @@ object Logger extends LoanAgent {
       new Exception("ゲーム実行中にエラーが発生しました。", ex), Fatal) }
     infoLog("Logger is successfully closed.")
     writer.close()
+    exOpt.foreach { throw _ }
   }
 
   sealed abstract class LogLevel {

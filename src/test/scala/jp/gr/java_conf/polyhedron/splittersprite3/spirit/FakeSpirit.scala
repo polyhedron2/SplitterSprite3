@@ -39,12 +39,11 @@ class FakeSpiritSpec
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit)
           spirit.innerSpiritMap.keys should be (Set())
         }
-        assert(success)
       }
     }
   }
@@ -55,12 +54,11 @@ class FakeSpiritSpec
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit("inner"))
           spirit.innerSpiritMap.keys should be (Set("inner"))
         }
-        assert(success)
       }
     }
   }
@@ -111,11 +109,10 @@ class FakeSpiritSpec
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit)
         }
-        assert(success)
       }
     }
   }
@@ -126,11 +123,10 @@ class FakeSpiritSpec
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit("inner"))
         }
-        assert(success)
       }
     }
   }
@@ -141,11 +137,10 @@ class FakeSpiritSpec
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
           classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           spirit.save()
         }
-        assert(success)
       }
     }
   }

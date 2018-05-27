@@ -17,8 +17,7 @@ trait LoanAgent {
 
   protected var alreadyUsing = false
 
-  // 戻り値は成功終了か否か
-  def loan(operation: => Any): Boolean = {
+  def loan(operation: => Any) {
     synchronized {
       if (alreadyUsing) { throw new AgentDoublyUsed(this) }
       alreadyUsing = true
@@ -36,9 +35,6 @@ trait LoanAgent {
         case e: Exception => Some(e)
       }
       exit(exOpt)
-
-      // exOptがNoneであれば成功終了
-      exOpt.isEmpty
     } finally {
       synchronized { alreadyUsing = false }
     }
@@ -48,8 +44,7 @@ trait LoanAgent {
 object LoanAgent {
   lazy val agents = List(Logger, ThreadPool)
 
-  // 戻り値は成功終了か否か
-  def loan(operation: => Any, agentList: List[LoanAgent]): Boolean =
+  def loan(operation: => Any, agentList: List[LoanAgent]) {
     synchronized {
       agentList match {
         case head :: tail => head.loan { loan(operation, tail) }
@@ -61,7 +56,7 @@ object LoanAgent {
         }
       }
     }
+  }
 
-  // 戻り値は成功終了か否か
-  def loan(operation: => Any): Boolean = loan(operation, agents)
+  def loan(operation: => Any) { loan(operation, agents) }
 }

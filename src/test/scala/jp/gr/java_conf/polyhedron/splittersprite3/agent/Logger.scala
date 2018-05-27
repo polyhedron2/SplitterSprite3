@@ -10,7 +10,7 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         logLevel: agent.Logger.LogLevel,
         expectedLines: List[String], unexpectedLines: List[String]) {
       val testIOUtils = Atmosphere.withTestIOUtils {
-        val success = agent.LoanAgent.loan {
+        agent.LoanAgent.loan {
           val prevLogLevel = agent.Logger.logLevel
           agent.Logger.logLevel = logLevel
           try {
@@ -24,7 +24,6 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             agent.Logger.logLevel = prevLogLevel
           }
         }
-        assert(success)
       }
       val error = testIOUtils.dumpStdErr()
       expectedLines.foreach(error should include (_))
@@ -94,10 +93,11 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
   "Logger" should "処理中に生じた例外はprintStackTrace" in {
     val testIOUtils = Atmosphere.withTestIOUtils {
-      val success = agent.LoanAgent.loan {
-        throw new Exception("this is uncaught exception")
+      intercept[Exception] {
+        agent.LoanAgent.loan {
+          throw new Exception("this is uncaught exception")
+        }
       }
-      assert(!success)
     }
     val error = testIOUtils.dumpStdErr()
     error should include (
@@ -123,8 +123,7 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             "dummy_004.log", "dummy_005.log", "dummy_006.log", "dummy_007.log",
             "dummy_008.log", "dummy_009.log", "dummy_010.log"))
 
-        val success = agent.LoanAgent.loan {}
-        assert(success)
+        agent.LoanAgent.loan {}
 
         Atmosphere.ioUtils.childrenList(logDir).map(
           Atmosphere.ioUtils.tailNameOf).toSet should be (Set(

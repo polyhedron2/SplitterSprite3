@@ -11,8 +11,7 @@ class TimeUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       Atmosphere.withTestIOUtils {
         Atmosphere.withTestTimeUtils(List()) {
           // Logger起動時のcurrentTimeMillis１回が実行される
-          val success = agent.LoanAgent.loan { }
-          assert(!success)
+          agent.LoanAgent.loan { }
         }
       }
     }
@@ -24,8 +23,7 @@ class TimeUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       Atmosphere.withTestIOUtils {
         Atmosphere.withTestTimeUtils(List(0, 1)) {
           // Logger起動時のcurrentTimeMillis１回が実行される
-          val success = agent.LoanAgent.loan { }
-          assert(success)
+          agent.LoanAgent.loan { }
         }
       }
     }
