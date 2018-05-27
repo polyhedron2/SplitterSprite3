@@ -1,23 +1,21 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
-import javafx.scene.input.{KeyEvent}
-
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
-// Windowへのキー入力をゲームへの入力に流し込む調整クラス
+// JavaFX Sceneへのキー入力をゲームへの入力に流し込む調整クラス
 // 主な役割は
-//   - １フレーム中に過剰な量のキーボード入力があれば量を調節する
-//     特にゲームの処理がラグった際のキー入力量を調節することが目的
-//   - マルチメソッド処理時の入力内容の同期
+//   1. ゲームがラグった際に同一キーへの連打がされても
+//      最低限の量だけゲームプログラムに送り込む
+//   2. リプレイ機能のためのキー入力内容の一意性の確保
 // この調節のため、キー入力は以下の前提を受けるものとする
 //   1. １フレーム内で同一キーの押しおよび放しは１回までに省略される
 //     例：'A'「押し」=>'A'「放し」=>'A'「押し」の入力があれば、
 //         'A'「押し」のみに省略される
-//   2. １フレーム内で異なるキーの押しおよび放しは上限なく同時に処理される
-//   3. 同一フレーム内の同一キー間の押し・放しの順序は保持される
-//   4. 同一フレーム内の異なるキー間の押し・放しの順序は保持されない
+//   2. 同一フレーム内の異なるキー間の押し・放しの順序は保持されず
+//      キーの文字列順でソートされる
 //     例：'A'「押し」=>'B'「押し」=>'A'「放し」=>'B'「放し」の入力があれば、
-//         'A'と'B'の間の前後関係は考慮されない
+//         'A'「押し」=>'A'「放し」=>'B'「押し」=>'B'「放し」になる
+// 挙動の詳細はCommandRegulatorSpec参照
 class CommandRegulator() {
   // キーが押されているか否かが１フレーム中にどのように切り替わったか
   abstract class InnerKeyCommand {
@@ -83,18 +81,17 @@ class CommandRegulator() {
   private var commandMap =
     Map[String, InnerKeyCommand]().withDefault(AlreadyReleased)
 
-  def enqueuePress(e: KeyEvent) {
-    synchronized {
-      commandMap += e.getText() -> commandMap(e.getText()).pressed
-    }
+  // 今フレーム中の「押し」をインプットする
+  def enqueuePress(text: String) {
+    synchronized { commandMap += text -> commandMap(text).pressed }
   }
 
-  def enqueueRelease(e: KeyEvent) {
-    synchronized {
-      commandMap += e.getText() -> commandMap(e.getText()).released
-    }
+  // 今フレーム中の「放し」をインプットする
+  def enqueueRelease(text: String) {
+    synchronized { commandMap += text -> commandMap(text).released }
   }
 
+  // １フレーム分の入力を返して、次のフレームの準備をする
   def dequeue(): List[common.Command] = {
     synchronized {
       // keyText順にactualCommandListを連結したものが、戻り値

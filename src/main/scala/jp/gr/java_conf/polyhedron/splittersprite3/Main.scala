@@ -53,14 +53,14 @@ class Main() extends Application {
     scene.setOnKeyPressed(
       new EventHandler[KeyEvent]() {
         def handle(e: KeyEvent) {
-          Atmosphere.commandRegulator("main").enqueuePress(e)
+          Atmosphere.commandRegulator("main").enqueuePress(e.getText())
         }
       })
 
     scene.setOnKeyReleased(
       new EventHandler[KeyEvent]() {
         def handle(e: KeyEvent) {
-          Atmosphere.commandRegulator("main").enqueueRelease(e)
+          Atmosphere.commandRegulator("main").enqueueRelease(e.getText())
         }
       })
 
