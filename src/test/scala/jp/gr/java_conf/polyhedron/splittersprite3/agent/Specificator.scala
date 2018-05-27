@@ -3,7 +3,7 @@ import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{OutermostSpawner}
-import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit}
+import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 object SpecificatorSpec {
   class EmptySpecSpawner(val spirit: Spirit) extends OutermostSpawner[Any] {
@@ -52,6 +52,20 @@ object SpecificatorSpec {
     val fakeArgs = ()
   }
 
+  class InvalidConstructorArgSpawner() extends OutermostSpawner[Any] {
+    val spirit = new FakeSpirit()
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
+
+  class InvalidConstructorProcessSpawner(val spirit: Spirit)
+      extends OutermostSpawner[Any] {
+    throw new Exception("invalid process")
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
 }
 
 class SpecificatorSpec
@@ -120,6 +134,24 @@ class SpecificatorSpec
         }
       }
     }
+  }
 
+  "Specificator" should "不正なSpawnerに対しては例外" in {
+    Atmosphere.withTestIOUtils {
+      Atmosphere.withTestReflectionUtils(
+          classOf[SpecificatorSpec.EmptySpecSpawner]) {
+        agent.LoanAgent.loan {
+          intercept[agent.Specificator.FailureToSpawnFakeInstance] {
+            agent.Specificator(
+              classOf[SpecificatorSpec.InvalidConstructorArgSpawner])
+          }
+
+          intercept[agent.Specificator.FailureToSpawnFakeInstance] {
+            agent.Specificator(
+              classOf[SpecificatorSpec.InvalidConstructorProcessSpawner])
+          }
+        }
+      }
+    }
   }
 }

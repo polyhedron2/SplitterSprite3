@@ -6,10 +6,6 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
-class FailureToSpawnFakeInstance(
-    cls: Class[_ <: Spawner[Any]], cause: Exception)
-  extends Exception(s"${cls.getName()}のフェイク生成に失敗しました。", cause)
-
 // SpawnerにFakeSpiritからspawnさせることでフィールド・型情報を
 // FakeSpiritに覚えさせるシングルトン
 object Specificator
@@ -43,4 +39,8 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
   case class DoubleSpec(defaultOpt: Option[Double]) extends Spec
   case class OutermostSpawnerSpec(
     spawnerCls: Class[_ <: OutermostSpawner[Any]]) extends Spec
+
+  class FailureToSpawnFakeInstance(
+      cls: Class[_ <: Spawner[Any]], cause: Exception)
+    extends Exception(s"${cls.getName()}のフェイク生成に失敗しました。", cause)
 }
