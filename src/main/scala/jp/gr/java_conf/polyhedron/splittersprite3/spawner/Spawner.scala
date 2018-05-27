@@ -29,7 +29,7 @@ sealed trait Spawner[+T] {
 
 object Spawner {
   def rawFakeSpawner(spawnerCls: Class[_ <: Spawner[Any]]): Spawner[Any] =
-    Atmosphere.reflectionUtils.concreteSubClassList(
+    Atmosphere.reflectionUtils.concreteSubClassSet(
         spawnerCls).headOption.getOrElse {
       throw new NoConcreteSpawnerClassException(spawnerCls)
     }.getConstructor(

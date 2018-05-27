@@ -22,19 +22,19 @@ abstract class ReflectionUtils {
     case e: NumberFormatException => false
   }
 
-  lazy val spawnerClassList: List[Class[_ <: Spawner[Any]]] =
-    classIterator.flatMap {
-      case cls: Class[_] => if (classOf[Spawner[Any]].isAssignableFrom(cls)) {
+  lazy val spawnerClassSet: Set[Class[_ <: Spawner[Any]]] =
+    classIterator.flatMap { case cls =>
+      if (classOf[Spawner[Any]].isAssignableFrom(cls)) {
         Some(cls.asInstanceOf[Class[Spawner[Any]]])
       } else {
         None
       }
-      case _ => None
-    }.toList
+    }.toSet
 
-  def concreteSubClassList(
-      spawnerCls: Class[_ <: Spawner[Any]]): List[Class[_ <: Spawner[Any]]] =
-    spawnerClassList.filter(cls =>
+  def concreteSubClassSet(
+      spawnerCls: Class[_ <: Spawner[Any]]): Set[Class[_ <: Spawner[Any]]] =
+    spawnerClassSet.filter(cls =>
+      spawnerCls.isAssignableFrom(cls) &&
       !isAnonymous(cls) &&
       !Modifier.isAbstract(cls.getModifiers()) &&
       !Modifier.isInterface(cls.getModifiers()))
