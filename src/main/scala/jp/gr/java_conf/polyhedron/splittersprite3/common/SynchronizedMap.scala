@@ -6,4 +6,5 @@ class SynchronizedMap[KEY, VALUE]() {
   def update(key: KEY, value: VALUE) {
     synchronized { body += key -> value }
   }
+  def keys: Iterable[KEY] = synchronized { body.keys }
 }

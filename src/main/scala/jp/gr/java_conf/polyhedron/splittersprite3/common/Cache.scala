@@ -34,7 +34,7 @@ trait Cache[KEY, VALUE] {
   // 評価内容を定義するメソッド
   protected def calc(key: KEY): VALUE
 
-  def keys: Iterable[KEY] = body.keys
+  def keys: Iterable[KEY] = synchronized { body.keys }
 
-  def clear() { body = Map() }
+  def clear(): Unit = synchronized { body = Map() }
 }
