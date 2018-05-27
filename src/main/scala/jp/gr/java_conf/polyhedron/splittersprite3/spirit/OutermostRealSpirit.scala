@@ -10,7 +10,7 @@ object OutermostRealSpirit {
     def calc(patchablePath: String) = new OutermostRealSpirit(patchablePath)
   }
 
-  def apply(patchablePath: String) = body(patchablePath)
+  def apply(patchablePath: String): OutermostRealSpirit = body(patchablePath)
 }
 
 // 最も外側のXMLを読み書きするRealSpirit

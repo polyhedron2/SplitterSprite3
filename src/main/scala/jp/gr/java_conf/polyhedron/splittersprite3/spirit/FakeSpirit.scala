@@ -44,8 +44,8 @@ class FakeSpirit() extends Spirit {
   val outermostSpawner = new OutermostSpawnerAccessor {
     // 書き込まれた値を保持するマップ
     private var dummyValueMap =
-      new common.Cache[
-          (String, Class[_ <: OutermostSpawner[Any]]),
+      new common.Cache[(
+          String, Class[_ <: OutermostSpawner[Any]]),
           OutermostSpawner[Any]] {
         def calc(key: (String, Class[_ <: OutermostSpawner[Any]])) =
           Spawner.rawFakeSpawner(key._2).asInstanceOf[OutermostSpawner[Any]]

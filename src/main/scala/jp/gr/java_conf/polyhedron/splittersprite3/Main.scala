@@ -29,7 +29,7 @@ class Main() extends Application {
       val controller = spawner.spawn(())
       agent.ThreadPool.startAndGetHalter(
         new agent.ThreadPool.IntervalRunnable {
-          override def fps = 60
+          override val fps = 60
           override def intervalRunOnce() = {
             controller.update()
             true

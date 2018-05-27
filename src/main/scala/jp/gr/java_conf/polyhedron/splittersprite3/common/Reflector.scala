@@ -10,7 +10,7 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{Spawner}
 
 // リフレクション関連の処理を扱うシングルトン
 object Reflector {
-  def typeOf[T: ClassTag] =
+  def typeOf[T: ClassTag]: Class[T] =
     implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
 
   lazy val jarFile = new JarFile(System.getProperty("java.class.path"))
@@ -42,9 +42,9 @@ object Reflector {
     }
   }
 
-	// 無名クラスか否か
+  // 無名クラスか否か
   // $Nで終わるクラス名は無名クラスに対応する
-  def isAnonymous(cls: Class[_]) = try {
+  def isAnonymous(cls: Class[_]): Boolean = try {
     val clsName = cls.toString().split("\\$", 0)
     val tailName = clsName(clsName.size - 1)
     tailName.toInt
@@ -53,14 +53,15 @@ object Reflector {
     case e: NumberFormatException => false
   }
 
-  lazy val spawnerClassList: List[Class[_ <: Spawner[Any]]] = classIterator.flatMap {
-    case cls: Class[_] => if (classOf[Spawner[Any]].isAssignableFrom(cls)) {
-      Some(cls.asInstanceOf[Class[Spawner[Any]]])
-    } else {
-      None
-    }
-    case _ => None
-  }.toList
+  lazy val spawnerClassList: List[Class[_ <: Spawner[Any]]] =
+    classIterator.flatMap {
+      case cls: Class[_] => if (classOf[Spawner[Any]].isAssignableFrom(cls)) {
+        Some(cls.asInstanceOf[Class[Spawner[Any]]])
+      } else {
+        None
+      }
+      case _ => None
+    }.toList
 
   def concreteSubClassList(
       spawnerCls: Class[_ <: Spawner[Any]]): List[Class[_ <: Spawner[Any]]] =
