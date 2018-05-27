@@ -79,8 +79,9 @@ object Atmosphere {
     withTestTimeUtils(currentTimeMillisList, "Asia/Tokyo")(op)
 
   // TestReflectionUtilsを用いて処理を実行し、戻り値として返す
-  def withTestReflectionUtils(classIterator: Iterator[Class[_]])(op: => Any):
+  def withTestReflectionUtils(classes: Class[_]*)(op: => Any):
       outerspace.TestReflectionUtils = synchronized {
+    val classIterator = Iterator(classes:_*)
     val prevReflectionUtils = innerReflectionUtils
     val testReflectionUtils = new outerspace.TestReflectionUtils(classIterator)
     try {

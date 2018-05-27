@@ -35,10 +35,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "呼び出されたフィールドと型を記憶する" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit)
@@ -50,10 +50,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "Inner Spiritも呼び出されたフィールドと型を記憶する" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit("inner"))
@@ -105,10 +105,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "書き込まれた値を保持する" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit)
@@ -119,10 +119,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "inner spiritも書き込まれた値を保持する" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit("inner"))
@@ -133,10 +133,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "saveメソッドを持つ" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           spirit.save()

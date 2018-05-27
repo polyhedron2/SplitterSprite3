@@ -54,13 +54,13 @@ class ReflectionUtilsSpec
     val anonymousSpawnerCls = new AbstractSpawner(new FakeSpirit()) {
     }.getClass()
 
-    Atmosphere.withTestReflectionUtils(Iterator(
+    Atmosphere.withTestReflectionUtils(
         classOf[SampleTrait], classOf[SampleAbstractClass],
         classOf[SampleConcreteClass],
         anonymousSpawnerCls, classOf[AbstractSpawner],
         classOf[ConcreteSpawner],
         classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-        classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+        classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
       Atmosphere.reflectionUtils.concreteSubClassSet(
         classOf[Spawner[Any]]) should be (Set(
         classOf[ConcreteSpawner],
@@ -102,5 +102,28 @@ class ReflectionUtilsSpec
         classOf[ConcreteSpawnerXY]) should be (Set(
         classOf[ConcreteSpawnerXY]))
     }
+  }
+
+  "ReflectionUtils" should "実装メソッド一覧を取得可能" in {
+    trait Trait { def traitMethod() { } }
+    abstract class Abstract() { def abstractMethod() { } }
+    class Concrete() extends Abstract with Trait { def concreteMethod() { } }
+    val obj = new Concrete() { def anonymousMethod() { } }
+
+    val methodNames = Atmosphere.reflectionUtils.allDeclaredMethods(
+      obj.getClass()).map(_.getName())
+    assert(methodNames("traitMethod"))
+    assert(methodNames("abstractMethod"))
+    assert(methodNames("concreteMethod"))
+    assert(methodNames("anonymousMethod"))
+  }
+
+  "ReflectionUtils" should "Spawnerの遅延評価を実行可能" in {
+    var called = false
+    val spawner = new ConcreteSpawner(new FakeSpirit()) {
+      lazy val testedLazyVal = { called = true }
+    }
+    Atmosphere.reflectionUtils.callLazyVals(spawner)
+    assert(called)
   }
 }

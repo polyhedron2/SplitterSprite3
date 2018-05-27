@@ -1,5 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner}
@@ -24,6 +25,9 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
     } catch {
       case e: Exception => throw new FailureToSpawnFakeInstance(cls, e)
     }
+
+    // lazy valでspiritの値を呼んでいてもFakeSpiritに覚えさせる
+    Atmosphere.reflectionUtils.callLazyVals(spawner)
 
     // spawnを実行
     spawner.spawn(spawner.fakeArgs)

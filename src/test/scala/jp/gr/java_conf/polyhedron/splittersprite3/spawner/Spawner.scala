@@ -27,10 +27,10 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   "Spawner" should
       "与えられたSpawnerクラスに対し、Spawnerサブクラスインスタンスを返す" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
+      Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
         agent.LoanAgent.loan {
           assert(Spawner.rawFakeSpawner(
             classOf[DummySpawner]).isInstanceOf[DummySpawner])
@@ -66,8 +66,8 @@ class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
   "Spawner" should "具象サブクラスの無いSpawnerのインスタンス取得で例外" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator(
-          classOf[NotImplementedSpawner])) {
+      Atmosphere.withTestReflectionUtils(
+          classOf[NotImplementedSpawner]) {
         agent.LoanAgent.loan {
           intercept[NoConcreteSpawnerClassException] {
             Spawner.rawFakeSpawner(classOf[NotImplementedSpawner])
