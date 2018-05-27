@@ -43,23 +43,18 @@ class FakeSpirit() extends Spirit {
 
   val outermostSpawner = new OutermostSpawnerAccessor {
     // 書き込まれた値を保持するマップ
-    private var dummyValueMap =
-      new common.Cache[(
-          String, Class[_ <: OutermostSpawner[Any]]),
-          OutermostSpawner[Any]] {
-        def calc(key: (String, Class[_ <: OutermostSpawner[Any]])) =
-          Spawner.rawFakeSpawner(key._2).asInstanceOf[OutermostSpawner[Any]]
-      }
+    private var dummyValueMap = Map[String, OutermostSpawner[Any]]()
 
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String) = {
       val spawnerCls = Atmosphere.reflectionUtils.typeOf[T]
       specMap += (field -> agent.Specificator.OutermostSpawnerSpec(spawnerCls))
-      dummyValueMap(field, spawnerCls).asInstanceOf[T]
+      val fakeSpawner =
+        Spawner.rawFakeSpawner(spawnerCls).asInstanceOf[OutermostSpawner[Any]]
+      dummyValueMap.get(field).getOrElse(fakeSpawner).asInstanceOf[T]
     }
 
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
-      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T]
-      dummyValueMap((field, spawnerCls)) = value
+      dummyValueMap += field -> value
     }
   }
 

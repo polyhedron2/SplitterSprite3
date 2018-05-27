@@ -10,18 +10,6 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 
-trait DummySpawner extends OutermostSpawner[Any] {
-  type SpawnArgs = Unit
-  def createInstance(x: Unit) = ()
-  val fakeArgs = ()
-}
-abstract class AbstractSpawner(val spirit: Spirit) extends DummySpawner
-class ConcreteSpawner(spirit: Spirit) extends AbstractSpawner(spirit)
-class ConcreteSpawnerX(spirit: Spirit) extends ConcreteSpawner(spirit)
-class ConcreteSpawnerY(spirit: Spirit) extends ConcreteSpawner(spirit)
-class ConcreteSpawnerXX(spirit: Spirit) extends ConcreteSpawnerX(spirit)
-class ConcreteSpawnerXY(spirit: Spirit) extends ConcreteSpawnerX(spirit)
-
 class ReflectionUtilsSpec
     extends FlatSpec with DiagrammedAssertions with Matchers {
   trait SampleTrait

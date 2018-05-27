@@ -6,14 +6,6 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{OutermostSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 
-class TestOutermostSpawner(val spirit: Spirit)
-    extends OutermostSpawner[String] {
-  var id: Int = 0
-  type SpawnArgs = Unit
-  val fakeArgs = ()
-  def createInstance(u: SpawnArgs) = "spawned string"
-}
-
 class FakeSpiritSpec
     extends FlatSpec with DiagrammedAssertions with Matchers {
 
@@ -26,7 +18,7 @@ class FakeSpiritSpec
     spirit.int("integer field 2", 42)
     spirit.double("double field 1")
     spirit.double("double field 2", 3.14)
-    spirit.outermostSpawner[TestOutermostSpawner]("outermost field")
+    spirit.outermostSpawner[DummySpawner]("outermost field")
 
     spirit.specMap should be (Map(
       "string field 1" -> agent.Specificator.StringSpec(None),
@@ -38,13 +30,15 @@ class FakeSpiritSpec
       "double field 1" -> agent.Specificator.DoubleSpec(None),
       "double field 2" -> agent.Specificator.DoubleSpec(Some(3.14)),
       "outermost field" -> agent.Specificator.OutermostSpawnerSpec(
-        classOf[TestOutermostSpawner])))
+        classOf[DummySpawner])))
   }
 
   "FakeSpirit" should "呼び出されたフィールドと型を記憶する" in {
     Atmosphere.withTestIOUtils {
       Atmosphere.withTestReflectionUtils(Iterator(
-          classOf[TestOutermostSpawner])) {
+          classOf[AbstractSpawner], classOf[ConcreteSpawner],
+          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
         val success = agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit)
@@ -58,7 +52,9 @@ class FakeSpiritSpec
   "FakeSpirit" should "Inner Spiritも呼び出されたフィールドと型を記憶する" in {
     Atmosphere.withTestIOUtils {
       Atmosphere.withTestReflectionUtils(Iterator(
-          classOf[TestOutermostSpawner])) {
+          classOf[AbstractSpawner], classOf[ConcreteSpawner],
+          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
         val success = agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit("inner"))
@@ -102,19 +98,19 @@ class FakeSpiritSpec
     spirit.double("double field 2") = 1024.0
     assert(spirit.double("double field 2", 3.14) === 1024.0)
 
-    assert(spirit.outermostSpawner[TestOutermostSpawner](
-      "outermost field").id === 0)
-    val newSpawner = new TestOutermostSpawner(new FakeSpirit())
+    assert(spirit.outermostSpawner[DummySpawner]("outermost field").id === 0)
+    val newSpawner = new ConcreteSpawner(new FakeSpirit())
     newSpawner.id = 100
     spirit.outermostSpawner("outermost field") = newSpawner
-    assert(spirit.outermostSpawner[TestOutermostSpawner](
-      "outermost field").id === 100)
+    assert(spirit.outermostSpawner[DummySpawner]("outermost field").id === 100)
   }
 
   "FakeSpirit" should "書き込まれた値を保持する" in {
     Atmosphere.withTestIOUtils {
       Atmosphere.withTestReflectionUtils(Iterator(
-          classOf[TestOutermostSpawner])) {
+          classOf[AbstractSpawner], classOf[ConcreteSpawner],
+          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
         val success = agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit)
@@ -127,7 +123,9 @@ class FakeSpiritSpec
   "FakeSpirit" should "inner spiritも書き込まれた値を保持する" in {
     Atmosphere.withTestIOUtils {
       Atmosphere.withTestReflectionUtils(Iterator(
-          classOf[TestOutermostSpawner])) {
+          classOf[AbstractSpawner], classOf[ConcreteSpawner],
+          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
         val success = agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit("inner"))
@@ -139,7 +137,10 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "saveメソッドを持つ" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(Iterator()) {
+      Atmosphere.withTestReflectionUtils(Iterator(
+          classOf[AbstractSpawner], classOf[ConcreteSpawner],
+          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY])) {
         val success = agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           spirit.save()
