@@ -1,8 +1,8 @@
-import org.scalatest.{FlatSpec, DiagrammedAssertions}
+import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 
-class CacheSpec extends FlatSpec with DiagrammedAssertions {
+class CacheSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     //文字列をDoubleに変換するサンプル
     val strDoubleCache = new common.Cache[String, Double]() {
         def calc(key: String) = {
@@ -32,9 +32,36 @@ class CacheSpec extends FlatSpec with DiagrammedAssertions {
         assert(intObjCache(100) === Value(100))
     }
 
+    "Cache" should "保持ているキーの一覧を返す" in {
+        strDoubleCache.keys.toSet should be (
+            Set("0", "0.0", "1.0", "42", "0.5"))
+        intObjCache.keys.toSet should be (Set(0, 1, 100))
+    }
+
     "Cache" should "calcの例外はそのまま返す" in {
         intercept[NumberFormatException] { strDoubleCache("") }
         intercept[NumberFormatException] { strDoubleCache("foo") }
+    }
+
+    "Cache" should "外部から与えられた値があればそれを保持" in {
+        // 一度キャッシュをクリア
+        strDoubleCache.clear()
+        intObjCache.clear()
+        strDoubleCache.keys.toSet should be (Set())
+        intObjCache.keys.toSet should be (Set())
+
+        strDoubleCache("0.0") = 42
+        assert(strDoubleCache("0.0") === 42)
+        intObjCache(0) = Value(42)
+        assert(intObjCache(0) === Value(42))
+
+        // 一度値がキャッシュされていても上書き可能
+        assert(strDoubleCache("1.0") === 1)
+        assert(intObjCache(1) === Value(1))
+        strDoubleCache("1.0") = 42
+        assert(strDoubleCache("1.0") === 42)
+        intObjCache(1) = Value(42)
+        assert(intObjCache(1) === Value(42))
     }
 
     var callCount = Map[String, Int]().withDefaultValue(0)

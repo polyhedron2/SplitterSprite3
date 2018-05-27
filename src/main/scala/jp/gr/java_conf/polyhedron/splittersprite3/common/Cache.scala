@@ -35,4 +35,6 @@ trait Cache[KEY, VALUE] {
   protected def calc(key: KEY): VALUE
 
   def keys: Iterable[KEY] = body.keys
+
+  def clear() { body = Map() }
 }
