@@ -345,4 +345,55 @@ class ThreadPoolSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
   }
+
+  "IntervalRunnable" should "定期的にintervalRunOnceの内容を実行" in {
+    var count = 0
+
+    val runnable = new agent.ThreadPool.IntervalRunnable() {
+      override val fps = 1000 / wait_ms
+      override def intervalRunOnce() = {
+        count += 1
+        true
+      }
+    }
+
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
+        val halter = agent.ThreadPool.startAndGetHalter(runnable)
+        Thread.sleep(wait_ms / 2)
+        for (expectedCount <- 1 to 10) {
+          assert(count === expectedCount)
+          Thread.sleep(wait_ms)
+        }
+        halter()
+      }
+      assert(success)
+    }
+  }
+
+  "IntervalRunnable" should "intervalRunOnceに時間がかかるなら連続実行" in {
+    var count = 0
+
+    val runnable = new agent.ThreadPool.IntervalRunnable() {
+      override val fps = 1000 / wait_ms
+      override def intervalRunOnce() = {
+        count += 1
+        Thread.sleep(wait_ms * 2)
+        true
+      }
+    }
+
+    Atmosphere.withTestIOUtils {
+      val success = agent.LoanAgent.loan {
+        val halter = agent.ThreadPool.startAndGetHalter(runnable)
+        Thread.sleep(wait_ms)
+        for (expectedCount <- 1 to 10) {
+          assert(count === expectedCount)
+          Thread.sleep(wait_ms * 2)
+        }
+        halter()
+      }
+      assert(success)
+    }
+  }
 }

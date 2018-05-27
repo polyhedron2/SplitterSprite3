@@ -128,17 +128,17 @@ object ThreadPool extends LoanAgent {
     var beforeTime_ms = 0L
 
     override def enter() {
-      beforeTime_ms = Atmosphere.timeUtils.currentTimeMillis
+      beforeTime_ms = System.currentTimeMillis
     }
 
     override def runOnce(): Boolean = {
       val continue = intervalRunOnce()
-      val afterTime_ms = Atmosphere.timeUtils.currentTimeMillis
+      val afterTime_ms = System.currentTimeMillis
       val elapsedTime_ms = afterTime_ms - beforeTime_ms
       val intervalTime_ms = 1000 / fps
       val sleepTime_ms = (intervalTime_ms - elapsedTime_ms) max 0
       Thread.sleep(sleepTime_ms)
-      beforeTime_ms = Atmosphere.timeUtils.currentTimeMillis
+      beforeTime_ms = System.currentTimeMillis
       continue
     }
 
