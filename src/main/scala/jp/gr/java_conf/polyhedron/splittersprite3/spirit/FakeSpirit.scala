@@ -29,11 +29,10 @@ class FakeSpirit() extends Spirit {
         specFactory: Option[VALUE] => agent.Specificator.Spec)
       extends ValueAccessor[VALUE] {
     // 書き込まれた値を保持するマップ
-    private var dummyValueMap =
-      Map[String, VALUE]().withDefaultValue(dummyDefaultValue)
+    private var dummyValueMap = Map[String, VALUE]()
     private def apply(field: String, defaultOpt: Option[VALUE]) = {
       specMap += (field -> specFactory(defaultOpt))
-      dummyValueMap(field)
+      dummyValueMap.get(field).orElse(defaultOpt).getOrElse(dummyDefaultValue)
     }
     def apply(field: String): VALUE = apply(field, None)
     def apply(field: String, default: VALUE): VALUE =
