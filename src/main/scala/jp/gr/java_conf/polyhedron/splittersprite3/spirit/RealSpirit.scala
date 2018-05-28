@@ -17,6 +17,9 @@ class SpawnerProcessingLoopException(patchablePath: String)
   extends Exception(s"${patchablePath}のSpawnerが循環参照しています。")
 class SpawnerIsNotDefined(patchablePath: String)
   extends Exception(s"${patchablePath}のSpawnerが未定義です。")
+class SpawnerIsInvalid(
+    patchablePath: String, spawnerName: String, cause: Exception)
+  extends Exception(s"${patchablePath}のSpawner'${spawnerName}'が不正です。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
 abstract class RealSpirit extends Spirit {
@@ -28,7 +31,7 @@ abstract class RealSpirit extends Spirit {
     (xml \ element).find(_.\("@field").text == field).map(_.text)
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  def rawValueOpt(field: String): Option[String] = rawValueOpt("val", field)
+  def rawValueOpt(field: String): Option[String] = rawValueOpt("value", field)
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
@@ -40,10 +43,17 @@ abstract class RealSpirit extends Spirit {
     val clsPath = rawValueOpt("spawner", "spawner").getOrElse {
       throw new SpawnerIsNotDefined(patchablePath)
     }
+
+    val constructor = try {
+      val cls = Class.forName(clsPath)
+      cls.getConstructor(classOf[Spirit])
+    } catch {
+      case e: Exception =>
+        throw new SpawnerIsInvalid(patchablePath, clsPath, e)
+    }
+
     try {
       isProcessingSpawner = true
-      val cls = Class.forName(clsPath)
-      val constructor = cls.getConstructor(classOf[Spirit])
       constructor.newInstance(this).asInstanceOf[Spawner[Any]]
     } finally {
       isProcessingSpawner = false
@@ -102,7 +112,8 @@ abstract class RealSpirit extends Spirit {
   }
 
   def resolveRelativePath(relativePath: String): String =
-    Paths.get(patchablePath).resolve(relativePath).normalize.toString
+    Paths.get(patchablePath).resolve("..").resolve(
+      relativePath).normalize.toString
 
   val outermostSpawner = new OutermostSpawnerAccessor {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =

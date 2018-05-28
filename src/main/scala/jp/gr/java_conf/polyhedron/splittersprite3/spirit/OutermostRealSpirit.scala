@@ -11,6 +11,7 @@ object OutermostRealSpirit {
   }
 
   def apply(patchablePath: String): OutermostRealSpirit = body(patchablePath)
+  def clear() { body.clear() }
 }
 
 // 最も外側のXMLを読み書きするRealSpirit
