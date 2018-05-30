@@ -27,11 +27,9 @@ abstract class RealSpirit extends Spirit {
   val lock: AnyRef
   def xml: Node
 
+  // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
   private def rawValueOpt(element: String, field: String) =
     (xml \ element).find(_.\("@field").text == field).map(_.text)
-
-  // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  def rawValueOpt(field: String): Option[String] = rawValueOpt("value", field)
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
@@ -61,26 +59,32 @@ abstract class RealSpirit extends Spirit {
   }
 
   val string = new RealValueAccessor[String] {
+    val element = "string"
     def rawValue2Value(rawValue: String) = rawValue
     def value2RawValue(value: String) = value
   }
 
   val boolean = new RealValueAccessor[Boolean] {
+    val element = "boolean"
     def rawValue2Value(rawValue: String) = rawValue.toBoolean
     def value2RawValue(value: Boolean) = value.toString
   }
 
   val int = new RealValueAccessor[Int] {
+    val element = "int"
     def rawValue2Value(rawValue: String) = rawValue.toInt
     def value2RawValue(value: Int) = value.toString
   }
 
   val double = new RealValueAccessor[Double] {
+    val element = "double"
     def rawValue2Value(rawValue: String) = rawValue.toDouble
     def value2RawValue(value: Double) = value.toString
   }
 
   abstract class RealValueAccessor[VALUE] extends ValueAccessor[VALUE] {
+    def element: String
+
     // XML上の文字列から指定のリテラルに変換
     def rawValue2Value(rawValue: String): VALUE
     // 指定のリテラルから文字列に変換
@@ -88,7 +92,7 @@ abstract class RealSpirit extends Spirit {
 
     def apply(field: String): VALUE = lock.synchronized {
       try {
-        rawValueOpt(field).map(rawValue2Value)
+        rawValueOpt(element, field).map(rawValue2Value)
       } catch {
         // 文字列をリテラルに変換できなかった場合
         case e: Exception =>
@@ -119,7 +123,7 @@ abstract class RealSpirit extends Spirit {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
       lock.synchronized {
         try {
-          rawValueOpt(field).map(resolveRelativePath).map(
+          rawValueOpt("outermost", field).map(resolveRelativePath).map(
             OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
         } catch {
           // 文字列をSpawnerに変換できなかった場合

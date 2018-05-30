@@ -122,19 +122,19 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>,
           "testDir/tested_2.xml" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>))
 
         assert(spiritMap("tested.xml").name === "tested.xml")
@@ -151,10 +151,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>))
 
         val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
@@ -196,10 +196,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DefaultedSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>))
 
         val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
@@ -221,10 +221,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
               classOf[RealSpiritSpec.InnerValsSpawner].getName()
             }</spawner>
             <inner field="inner field">
-              <value field="string field">foo</value>
-              <value field="boolean field">true</value>
-              <value field="int field">42</value>
-              <value field="double field">3.14</value>
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
             </inner>
           </root>))
 
@@ -268,10 +268,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
               classOf[RealSpiritSpec.DefaultedInnerSpawner].getName()
             }</spawner>
             <inner field="inner field">
-              <value field="string field">foo</value>
-              <value field="boolean field">true</value>
-              <value field="int field">42</value>
-              <value field="double field">3.14</value>
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
             </inner>
           </root>))
 
@@ -293,16 +293,16 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
-            <value field="outermost field">referred.xml</value>
+            <outermost field="outermost field">referred.xml</outermost>
           </root>,
           "referred.xml" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>))
 
         val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
@@ -323,16 +323,16 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.PolymorphismAnotherSpawner].getName()
             }</spawner>
-            <value field="outermost field">referred.xml</value>
+            <outermost field="outermost field">referred.xml</outermost>
           </root>,
           "referred.xml" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">true</value>
-            <value field="int field">42</value>
-            <value field="double field">3.14</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
           </root>))
 
         val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
@@ -352,7 +352,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.LazyInfiniteReferSpawner].getName()
             }</spawner>
-            <value field="outermost field">tested.xml</value>
+            <outermost field="outermost field">tested.xml</outermost>
           </root>))
 
         val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
@@ -372,7 +372,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DiligentInfiniteReferSpawner].getName()
             }</spawner>
-            <value field="outermost field">tested.xml</value>
+            <outermost field="outermost field">tested.xml</outermost>
           </root>))
 
         val e = intercept[InvocationTargetException] {
@@ -437,8 +437,8 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
-            <value field="string field">foo</value>
-            <value field="boolean field">yes</value>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">yes</boolean>
           </root>))
 
         val e = intercept[InvocationTargetException] {
@@ -455,7 +455,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
-            <value field="outermost field">nope.xml</value>
+            <outermost field="outermost field">nope.xml</outermost>
           </root>))
 
         val e = intercept[InvocationTargetException] {
