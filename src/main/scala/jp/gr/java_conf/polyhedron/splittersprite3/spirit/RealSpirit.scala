@@ -22,6 +22,7 @@ class SpawnerIsInvalid(
   extends Exception(s"${patchablePath}のSpawner'${spawnerName}'が不正です。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
+// 拡張子は*.spirit
 abstract class RealSpirit extends Spirit {
   // XMLファイルアクセスロック用オブジェクト
   val lock: AnyRef

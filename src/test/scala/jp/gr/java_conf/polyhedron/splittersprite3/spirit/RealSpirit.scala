@@ -118,7 +118,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -127,7 +127,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <int field="int field">42</int>
             <double field="double field">3.14</double>
           </root>,
-          "testDir/tested_2.xml" -> <root>
+          "testDir/tested_2.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -137,8 +137,8 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <double field="double field">3.14</double>
           </root>))
 
-        assert(spiritMap("tested.xml").name === "tested.xml")
-        assert(spiritMap("testDir/tested_2.xml").name === "tested_2.xml")
+        assert(spiritMap("tested.spirit").name === "tested.spirit")
+        assert(spiritMap("testDir/tested_2.spirit").name === "tested_2.spirit")
       }
     }
   }
@@ -147,7 +147,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -157,7 +157,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <double field="double field">3.14</double>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.StandardSpawner]
         assert(spawner.string === "foo")
         assert(spawner.boolean === true)
@@ -173,13 +173,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DefaultedSpawner].getName()
             }</spawner>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.DefaultedSpawner]
         assert(spawner.string === "bar")
         assert(spawner.boolean === false)
@@ -192,7 +192,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DefaultedSpawner].getName()
             }</spawner>
@@ -202,7 +202,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <double field="double field">3.14</double>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.DefaultedSpawner]
         assert(spawner.string === "foo")
         assert(spawner.boolean === true)
@@ -216,7 +216,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.InnerValsSpawner].getName()
             }</spawner>
@@ -228,7 +228,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             </inner>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.InnerValsSpawner]
         assert(spawner.string === "foo")
         assert(spawner.boolean === true)
@@ -244,13 +244,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DefaultedInnerSpawner].getName()
             }</spawner>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.DefaultedInnerSpawner]
         assert(spawner.string === "bar")
         assert(spawner.boolean === false)
@@ -263,7 +263,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DefaultedInnerSpawner].getName()
             }</spawner>
@@ -275,7 +275,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             </inner>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.DefaultedInnerSpawner]
         assert(spawner.string === "foo")
         assert(spawner.boolean === true)
@@ -289,13 +289,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
-            <outermost field="outermost field">referred.xml</outermost>
+            <outermost field="outermost field">referred.spirit</outermost>
           </root>,
-          "referred.xml" -> <root>
+          "referred.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -305,7 +305,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <double field="double field">3.14</double>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.ReferAnotherSpawner]
         assert(spawner.anotherSpawner.string === "foo")
         assert(spawner.anotherSpawner.boolean === true)
@@ -319,13 +319,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.PolymorphismAnotherSpawner].getName()
             }</spawner>
-            <outermost field="outermost field">referred.xml</outermost>
+            <outermost field="outermost field">referred.spirit</outermost>
           </root>,
-          "referred.xml" -> <root>
+          "referred.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -335,7 +335,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             <double field="double field">3.14</double>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.PolymorphismAnotherSpawner]
         assert(
           spawner.anotherSpawner.isInstanceOf[RealSpiritSpec.StandardSpawner])
@@ -348,14 +348,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.LazyInfiniteReferSpawner].getName()
             }</spawner>
-            <outermost field="outermost field">tested.xml</outermost>
+            <outermost field="outermost field">tested.spirit</outermost>
           </root>))
 
-        val spawner = spiritMap("tested.xml").spawner.asInstanceOf[
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
           RealSpiritSpec.LazyInfiniteReferSpawner]
         assert(spawner.anotherSpawner.isInstanceOf[
           RealSpiritSpec.LazyInfiniteReferSpawner])
@@ -368,15 +368,15 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.DiligentInfiniteReferSpawner].getName()
             }</spawner>
-            <outermost field="outermost field">tested.xml</outermost>
+            <outermost field="outermost field">tested.spirit</outermost>
           </root>))
 
         val e = intercept[InvocationTargetException] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsInvalid])
         assert(
@@ -389,14 +389,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
           </root>))
 
         val e = intercept[InvocationTargetException] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsNotFound])
       }
@@ -405,14 +405,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
           </root>))
 
         val e = intercept[InvocationTargetException] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsNotFound])
       }
@@ -420,10 +420,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
-        val spiritMap = prepare(Map("tested.xml" -> <root></root>))
+        val spiritMap = prepare(Map("tested.spirit" -> <root></root>))
 
         intercept[SpawnerIsNotDefined] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
       }
     }
@@ -433,7 +433,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
             }</spawner>
@@ -442,7 +442,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           </root>))
 
         val e = intercept[InvocationTargetException] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsInvalid])
       }
@@ -451,15 +451,15 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
-            <outermost field="outermost field">nope.xml</outermost>
+            <outermost field="outermost field">nope.spirit</outermost>
           </root>))
 
         val e = intercept[InvocationTargetException] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsInvalid])
       }
@@ -468,12 +468,12 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
-          "tested.xml" -> <root>
+          "tested.spirit" -> <root>
             <spawner field="spawner">invalid cls path</spawner>
           </root>))
 
         intercept[SpawnerIsInvalid] {
-          spiritMap("tested.xml").spawner
+          spiritMap("tested.spirit").spawner
         }
       }
     }
