@@ -129,7 +129,7 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           Atmosphere.ioUtils.tailNameOf).toSet should be (Set(
             "dummy_002.log", "dummy_003.log", "dummy_004.log", "dummy_005.log",
             "dummy_006.log", "dummy_007.log", "dummy_008.log", "dummy_009.log",
-            "dummy_010.log", "1970-01-01_Thu_00:00:00.000_+00:00.log"))
+            "dummy_010.log", "1970-01-01_Thu_00_00_00.000_+00_00.log"))
       }
     }
   }

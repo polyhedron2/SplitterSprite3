@@ -3,6 +3,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3
 import java.io.{Reader}
 import java.nio.file.{Path, Paths}
 import javafx.scene.canvas.{GraphicsContext}
+import javafx.stage.{Stage}
 
 // ゲームのすべての入出力（プレイヤーの操作、ファイル読み書き、乱数、時刻）
 // を管理するシングルトン
@@ -27,7 +28,8 @@ object Atmosphere {
         new outerspace.CommandRegulator()
     }
 
-  val graphicsContext = new common.SynchronizedMap[String, GraphicsContext]()
+  val javaFXTaskQueue =
+    new scala.collection.mutable.SynchronizedQueue[Stage => Any]()
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(

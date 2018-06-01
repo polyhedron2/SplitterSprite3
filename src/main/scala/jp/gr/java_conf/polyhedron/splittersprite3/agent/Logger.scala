@@ -17,7 +17,8 @@ object Logger extends LoanAgent {
   private def buildWriter(logDirPath: JPath) = {
     val logPath = {
       val logFileName = Paths.get(
-        Atmosphere.timeUtils.currentTimeMillisStr.replaceAll(" ", "_") +
+        Atmosphere.timeUtils.currentTimeMillisStr.replaceAll(
+          " ", "_").replaceAll(":", "_") +
         ".log")
       logDirPath.resolve(logFileName)
     }

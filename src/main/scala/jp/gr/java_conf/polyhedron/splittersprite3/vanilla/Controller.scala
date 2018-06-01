@@ -53,8 +53,7 @@ abstract class Controller() {
 
     def modelState2operation(modelState: ModelState): StackOperation
     def model: Model[ModelState]
-    // windowNameごとの描画View
-    def viewSeqMap: Map[String, Seq[View]]
+    def viewSeq: Seq[View]
 
     def update(): StackOperation = {
       for (windowName <- Atmosphere.commandRegulator.keys) {
@@ -66,11 +65,7 @@ abstract class Controller() {
       modelState2operation(modelState)
     }
 
-    def render() {
-      for ((windowName, viewSeq) <- viewSeqMap) {
-        viewSeq.foreach(_.render(Atmosphere.graphicsContext(windowName)))
-      }
-    }
+    def render() { viewSeq.foreach(_.render()) }
   }
 
   sealed abstract class StackOperation
