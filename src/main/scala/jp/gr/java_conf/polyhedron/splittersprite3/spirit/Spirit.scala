@@ -1,5 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
+import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
@@ -44,6 +45,12 @@ abstract class Spirit {
   abstract class OutermostSpawnerAccessor {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T)
+  }
+
+  val image: FileAccessor[Image]
+
+  abstract class FileAccessor[VALUE] {
+    def apply(field: String): VALUE
   }
 
   // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。

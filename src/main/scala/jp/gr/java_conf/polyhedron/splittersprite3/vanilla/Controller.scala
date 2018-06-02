@@ -50,7 +50,6 @@ abstract class Controller() {
 
   abstract class State {
     type ModelState
-
     def modelState2operation(modelState: ModelState): StackOperation
     def model: Model[ModelState]
     def viewSeq: Seq[View]

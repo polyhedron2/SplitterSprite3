@@ -6,4 +6,6 @@ import javafx.scene.image.{Image}
 object Resources {
   val logo = new Image(
     getClass().getClassLoader().getResourceAsStream("logo.png"))
+  val noImage = new Image(
+    getClass().getClassLoader().getResourceAsStream("no_image.png"))
 }

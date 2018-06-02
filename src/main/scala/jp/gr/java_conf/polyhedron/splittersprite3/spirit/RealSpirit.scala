@@ -1,9 +1,11 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 import java.nio.file.{Paths}
+import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 import scala.xml.{Node}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner}
@@ -139,6 +141,31 @@ abstract class RealSpirit extends Spirit {
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
       throw new UnsupportedOperationException("TODO: 実装")
     }
+  }
+
+  val image = new RealFileAccessor[Image] {
+    val element = "image"
+    def path2Value(patchablePath: String) =
+      new Image(Atmosphere.ioUtils.inputStream(patchablePath))
+  }
+
+  abstract class RealFileAccessor[VALUE] extends FileAccessor[VALUE] {
+    val element: String
+    def path2Value(patchablePath: String): VALUE
+
+    def apply(field: String): VALUE =
+      lock.synchronized {
+        try {
+          rawValueOpt(element, field).map(resolveRelativePath).map(path2Value)
+        } catch {
+          // 文字列をSpawnerに変換できなかった場合
+          case e: Exception =>
+            throw new SpiritValueIsInvalid(patchablePath, field, e)
+        }
+      } getOrElse {
+        // 文字列が設定されていなかった場合
+        throw new SpiritValueIsNotFound(patchablePath, field)
+      }
   }
 
   // InnerSpirit一覧管理用

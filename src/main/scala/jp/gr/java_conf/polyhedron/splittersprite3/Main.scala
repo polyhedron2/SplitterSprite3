@@ -23,8 +23,8 @@ object Main {
 class Main() extends Application {
   val gameName = "name"
   val mode = "main"
-  val width = 900
-  val height = 900
+  val width = 1280
+  val height = 720
   var primaryStageOpt: Option[Stage] = None
 
   def start(primaryStage: Stage) {
@@ -58,16 +58,41 @@ class Main() extends Application {
     }.start()
 
     new AnimationTimer() {
-      override def handle(now: Long) {
+      def _handle() {
         try {
           val operation = Atmosphere.javaFXTaskQueue.dequeue()
           operation(primaryStage)
-          handle(now)
+          _handle()
         } catch {
           case e: NoSuchElementException =>
         }
       }
+
+      override def handle(now: Long) {
+        _handle()
+        setKeyListener(primaryStage)
+      }
     }.start()
+  }
+
+  def setKeyListener(primaryStage: Stage) {
+    Option(primaryStage.getScene()).foreach { case scene =>
+      scene.setOnKeyPressed(
+        new EventHandler[KeyEvent]() {
+          def handle(e: KeyEvent) {
+            Atmosphere.commandRegulator("main").enqueuePress(
+              e.getCode().getName())
+          }
+        })
+
+      scene.setOnKeyReleased(
+        new EventHandler[KeyEvent]() {
+          def handle(e: KeyEvent) {
+            Atmosphere.commandRegulator("main").enqueueRelease(
+              e.getCode().getName())
+          }
+      })
+    }
   }
 
   def setUp(primaryStage: Stage) {
@@ -83,21 +108,9 @@ class Main() extends Application {
     val logoView = new ImageView(Resources.logo)
     pane.getChildren().add(logoView)
 
+    setKeyListener(primaryStage)
+
     primaryStage.show()
-
-    scene.setOnKeyPressed(
-      new EventHandler[KeyEvent]() {
-        def handle(e: KeyEvent) {
-          Atmosphere.commandRegulator("main").enqueuePress(e.getText())
-        }
-      })
-
-    scene.setOnKeyReleased(
-      new EventHandler[KeyEvent]() {
-        def handle(e: KeyEvent) {
-          Atmosphere.commandRegulator("main").enqueueRelease(e.getText())
-        }
-      })
   }
 
   // FPS計算値(未計算ならNone)

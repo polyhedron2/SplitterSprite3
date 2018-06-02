@@ -224,4 +224,7 @@ abstract class IOUtils {
     val reader = Files.newBufferedReader(searchPatchedFile(patchablePath))
     try { op(reader) } finally { reader.close() }
   }
+
+  def inputStream(patchablePath: String) =
+    Files.newInputStream(searchPatchedFile(patchablePath))
 }

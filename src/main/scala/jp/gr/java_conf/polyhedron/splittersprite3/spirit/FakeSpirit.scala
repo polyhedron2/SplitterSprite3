@@ -1,9 +1,10 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
+import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
-import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere, Resources}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner}
@@ -56,6 +57,12 @@ class FakeSpirit() extends Spirit {
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
       dummyValueMap += field -> value
     }
+  }
+
+  val image = new FakeFileAccessor[Image](Resources.noImage)
+
+  class FakeFileAccessor[VALUE](value: VALUE) extends FileAccessor[VALUE] {
+    def apply(field: String): VALUE = value
   }
 
   // フェイクのInnerSpirit一覧管理用
