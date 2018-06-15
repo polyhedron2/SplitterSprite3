@@ -3,7 +3,7 @@ import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  Spawner, OutermostSpawner, NoConcreteSpawnerClassException}
+  Spawner, OutermostSpawner, InnerSpawner, NoConcreteSpawnerClassException}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 
@@ -21,6 +21,15 @@ class ConcreteSpawnerXX(spirit: Spirit) extends ConcreteSpawnerX(spirit)
 class ConcreteSpawnerXY(spirit: Spirit) extends ConcreteSpawnerX(spirit)
 
 abstract class NotImplementedSpawner(val spirit: Spirit) extends DummySpawner
+
+trait DummyInnerSpawner extends InnerSpawner[Any] {
+  var id: Int = 0
+  type SpawnArgs = Unit
+  def createInstance(x: Unit) = ()
+  val fakeArgs = ()
+}
+
+class ConcreteInnerSpawner(val spirit: Spirit) extends DummyInnerSpawner
 
 class SpawnerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 

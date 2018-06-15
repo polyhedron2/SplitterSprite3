@@ -19,6 +19,7 @@ class FakeSpiritSpec
     spirit.double("double field 1")
     spirit.double("double field 2", 3.14)
     spirit.outermostSpawner[DummySpawner]("outermost field")
+    spirit.innerSpawner[DummyInnerSpawner]("inner field")
 
     spirit.specMap should be (Map(
       "string field 1" -> agent.Specificator.StringSpec(None),
@@ -30,7 +31,9 @@ class FakeSpiritSpec
       "double field 1" -> agent.Specificator.DoubleSpec(None),
       "double field 2" -> agent.Specificator.DoubleSpec(Some(3.14)),
       "outermost field" -> agent.Specificator.OutermostSpawnerSpec(
-        classOf[DummySpawner])))
+        classOf[DummySpawner]),
+      "inner field" -> agent.Specificator.InnerSpawnerSpec(
+        classOf[DummyInnerSpawner])))
   }
 
   "FakeSpirit" should "呼び出されたフィールドと型を記憶する" in {
@@ -38,7 +41,8 @@ class FakeSpiritSpec
       Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY],
+          classOf[ConcreteInnerSpawner]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit)
@@ -53,7 +57,8 @@ class FakeSpiritSpec
       Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY],
+          classOf[ConcreteInnerSpawner]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertSpec(spirit("inner"))
@@ -101,6 +106,12 @@ class FakeSpiritSpec
     newSpawner.id = 100
     spirit.outermostSpawner("outermost field") = newSpawner
     assert(spirit.outermostSpawner[DummySpawner]("outermost field").id === 100)
+
+    assert(spirit.innerSpawner[DummyInnerSpawner]("inner field").id === 0)
+    val newInnerSpawner = new ConcreteInnerSpawner(new FakeSpirit())
+    newInnerSpawner.id = 100
+    spirit.innerSpawner("inner field") = newInnerSpawner
+    assert(spirit.innerSpawner[DummyInnerSpawner]("inner field").id === 100)
   }
 
   "FakeSpirit" should "書き込まれた値を保持する" in {
@@ -108,7 +119,8 @@ class FakeSpiritSpec
       Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY],
+          classOf[ConcreteInnerSpawner]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit)
@@ -122,7 +134,8 @@ class FakeSpiritSpec
       Atmosphere.withTestReflectionUtils(
           classOf[AbstractSpawner], classOf[ConcreteSpawner],
           classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
+          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY],
+          classOf[ConcreteInnerSpawner]) {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           assertUpdate(spirit("inner"))
@@ -133,10 +146,7 @@ class FakeSpiritSpec
 
   "FakeSpirit" should "saveメソッドを持つ" in {
     Atmosphere.withTestIOUtils {
-      Atmosphere.withTestReflectionUtils(
-          classOf[AbstractSpawner], classOf[ConcreteSpawner],
-          classOf[ConcreteSpawnerX], classOf[ConcreteSpawnerY],
-          classOf[ConcreteSpawnerXX], classOf[ConcreteSpawnerXY]) {
+      Atmosphere.withTestReflectionUtils() {
         agent.LoanAgent.loan {
           val spirit = new FakeSpirit()
           spirit.save()

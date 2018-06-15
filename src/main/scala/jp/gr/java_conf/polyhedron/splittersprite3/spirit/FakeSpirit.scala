@@ -7,7 +7,7 @@ import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere, Resources}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  Spawner, OutermostSpawner}
+  Spawner, OutermostSpawner, InnerSpawner}
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス
 class FakeSpirit() extends Spirit {
@@ -42,6 +42,12 @@ class FakeSpirit() extends Spirit {
       dummyValueMap += (field -> value)
   }
 
+  val image = new FakeFileAccessor[Image](Resources.noImage)
+
+  class FakeFileAccessor[VALUE](value: VALUE) extends FileAccessor[VALUE] {
+    def apply(field: String): VALUE = value
+  }
+
   val outermostSpawner = new OutermostSpawnerAccessor {
     // 書き込まれた値を保持するマップ
     private var dummyValueMap = Map[String, OutermostSpawner[Any]]()
@@ -59,10 +65,21 @@ class FakeSpirit() extends Spirit {
     }
   }
 
-  val image = new FakeFileAccessor[Image](Resources.noImage)
+  val innerSpawner = new InnerSpawnerAccessor {
+    // 書き込まれた値を保持するマップ
+    private var dummyValueMap = Map[String, InnerSpawner[Any]]()
 
-  class FakeFileAccessor[VALUE](value: VALUE) extends FileAccessor[VALUE] {
-    def apply(field: String): VALUE = value
+    def apply[T <: InnerSpawner[Any]: ClassTag](field: String) = {
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T]
+      specMap += (field -> agent.Specificator.InnerSpawnerSpec(spawnerCls))
+      val fakeSpawner =
+        Spawner.rawFakeSpawner(spawnerCls).asInstanceOf[InnerSpawner[Any]]
+      dummyValueMap.get(field).getOrElse(fakeSpawner).asInstanceOf[T]
+    }
+
+    def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T) {
+      dummyValueMap += field -> value
+    }
   }
 
   // フェイクのInnerSpirit一覧管理用

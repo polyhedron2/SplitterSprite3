@@ -3,7 +3,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  Spawner, OutermostSpawner}
+  Spawner, OutermostSpawner, InnerSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{Spirit, FakeSpirit}
 
 // SpawnerにFakeSpiritからspawnさせることでフィールド・型情報を
@@ -39,6 +39,8 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
   case class DoubleSpec(defaultOpt: Option[Double]) extends Spec
   case class OutermostSpawnerSpec(
     spawnerCls: Class[_ <: OutermostSpawner[Any]]) extends Spec
+  case class InnerSpawnerSpec(
+    spawnerCls: Class[_ <: InnerSpawner[Any]]) extends Spec
 
   class FailureToSpawnFakeInstance(
       cls: Class[_ <: Spawner[Any]], cause: Exception)

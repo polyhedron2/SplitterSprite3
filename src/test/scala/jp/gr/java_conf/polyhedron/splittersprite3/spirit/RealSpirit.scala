@@ -5,7 +5,8 @@ import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
-import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{OutermostSpawner}
+import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
+  OutermostSpawner, InnerSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{
   Spirit, OutermostRealSpirit, SpawnerProcessingLoopException,
   SpawnerIsNotDefined, SpawnerIsInvalid,
@@ -47,7 +48,7 @@ object RealSpiritSpec {
     val fakeArgs = ()
   }
 
-  class DefaultedInnerSpawner(val spirit: Spirit)
+  class DefaultedInnerValsSpawner(val spirit: Spirit)
       extends OutermostSpawner[Any] {
     val string = spirit("inner field").string("string field", "bar")
     val boolean = spirit("inner field").boolean("boolean field", false)
@@ -92,6 +93,26 @@ object RealSpiritSpec {
       extends OutermostSpawner[Any] {
     val anotherSpawner =
       spirit.outermostSpawner[DiligentInfiniteReferSpawner]("outermost field")
+
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
+
+  class StandardInnerSpawner(val spirit: Spirit) extends InnerSpawner[Any] {
+    val string = spirit.string("string field")
+    val boolean = spirit.boolean("boolean field")
+    val int = spirit.int("int field")
+    val double = spirit.double("double field")
+
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
+
+  class ReferInnerSpawner(val spirit: Spirit) extends OutermostSpawner[Any] {
+    val anotherSpawner =
+      spirit.innerSpawner[StandardInnerSpawner]("inner field")
 
     type SpawnArgs = Unit
     def createInstance(x: Unit) = ()
@@ -246,12 +267,12 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
             <spawner field="spawner">{
-              classOf[RealSpiritSpec.DefaultedInnerSpawner].getName()
+              classOf[RealSpiritSpec.DefaultedInnerValsSpawner].getName()
             }</spawner>
           </root>))
 
         val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
-          RealSpiritSpec.DefaultedInnerSpawner]
+          RealSpiritSpec.DefaultedInnerValsSpawner]
         assert(spawner.string === "bar")
         assert(spawner.boolean === false)
         assert(spawner.int === 123)
@@ -265,7 +286,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
             <spawner field="spawner">{
-              classOf[RealSpiritSpec.DefaultedInnerSpawner].getName()
+              classOf[RealSpiritSpec.DefaultedInnerValsSpawner].getName()
             }</spawner>
             <inner field="inner field">
               <string field="string field">foo</string>
@@ -276,7 +297,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           </root>))
 
         val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
-          RealSpiritSpec.DefaultedInnerSpawner]
+          RealSpiritSpec.DefaultedInnerValsSpawner]
         assert(spawner.string === "foo")
         assert(spawner.boolean === true)
         assert(spawner.int === 42)
@@ -475,6 +496,62 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         intercept[SpawnerIsInvalid] {
           spiritMap("tested.spirit").spawner
         }
+      }
+    }
+  }
+
+  "RealSpirit" should "InnerSpawnerの読み込みが可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.ReferInnerSpawner].getName()
+            }</spawner>
+            <inner field="inner field">
+              <spawner field="spawner">{
+                classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+              }</spawner>
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.ReferInnerSpawner]
+        assert(spawner.anotherSpawner.isInstanceOf[
+          RealSpiritSpec.StandardInnerSpawner])
+        assert(spawner.anotherSpawner.string === "foo")
+        assert(spawner.anotherSpawner.boolean === true)
+        assert(spawner.anotherSpawner.int === 42)
+        assert(spawner.anotherSpawner.double === 3.14)
+      }
+    }
+  }
+
+  "RealSpirit" should "InnerSpawnerの不正な設定値により例外" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.ReferInnerSpawner].getName()
+            }</spawner>
+            <inner field="inner field">
+              <spawner field="spawner">invalid spawner cls path</spawner>
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
+            </inner>
+          </root>))
+
+        val e = intercept[InvocationTargetException] {
+          spiritMap("tested.spirit").spawner
+        }
+        assert(e.getCause().isInstanceOf[SpiritValueIsInvalid])
       }
     }
   }

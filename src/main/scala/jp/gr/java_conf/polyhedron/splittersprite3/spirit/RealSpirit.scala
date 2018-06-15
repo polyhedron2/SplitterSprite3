@@ -8,7 +8,7 @@ import scala.xml.{Node}
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  Spawner, OutermostSpawner}
+  Spawner, OutermostSpawner, InnerSpawner}
 
 class SpiritValueIsNotFound(patchablePath: String, field: String)
   extends Exception(s"${patchablePath}[${field}]の値が見つかりません。")
@@ -122,27 +122,6 @@ abstract class RealSpirit extends Spirit {
     Paths.get(patchablePath).resolve("..").resolve(
       relativePath).normalize.toString
 
-  val outermostSpawner = new OutermostSpawnerAccessor {
-    def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
-      lock.synchronized {
-        try {
-          rawValueOpt("outermost", field).map(resolveRelativePath).map(
-            OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
-        } catch {
-          // 文字列をSpawnerに変換できなかった場合
-          case e: Exception =>
-            throw new SpiritValueIsInvalid(patchablePath, field, e)
-        }
-      } getOrElse {
-        // 文字列が設定されていなかった場合
-        throw new SpiritValueIsNotFound(patchablePath, field)
-      }
-
-    def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
-      throw new UnsupportedOperationException("TODO: 実装")
-    }
-  }
-
   val image = new RealFileAccessor[Image] {
     val element = "image"
     def path2Value(patchablePath: String) =
@@ -166,6 +145,44 @@ abstract class RealSpirit extends Spirit {
         // 文字列が設定されていなかった場合
         throw new SpiritValueIsNotFound(patchablePath, field)
       }
+  }
+
+  val outermostSpawner = new OutermostSpawnerAccessor {
+    def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
+      lock.synchronized {
+        try {
+          rawValueOpt("outermost", field).map(resolveRelativePath).map(
+            OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
+        } catch {
+          // 文字列をSpawnerに変換できなかった場合
+          case e: Exception =>
+            throw new SpiritValueIsInvalid(patchablePath, field, e)
+        }
+      } getOrElse {
+        // 文字列が設定されていなかった場合
+        throw new SpiritValueIsNotFound(patchablePath, field)
+      }
+
+    def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
+  }
+
+  val innerSpawner = new InnerSpawnerAccessor {
+    def apply[T <: InnerSpawner[Any]: ClassTag](field: String): T =
+      lock.synchronized {
+        try {
+          innerSpiritMap(field).spawner.asInstanceOf[T]
+        } catch {
+          // InnerRealSpiritをSpawnerに変換できなかった場合
+          case e: Exception =>
+            throw new SpiritValueIsInvalid(patchablePath, field, e)
+        }
+      }
+
+    def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
   }
 
   // InnerSpirit一覧管理用

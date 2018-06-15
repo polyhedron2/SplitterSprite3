@@ -4,7 +4,7 @@ import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  OutermostSpawner
+  OutermostSpawner, InnerSpawner
 }
 
 // XMLファイルへの読み書きを定める抽象クラス
@@ -40,6 +40,12 @@ abstract class Spirit {
     def update(field: String, value: VALUE): Unit
   }
 
+  val image: FileAccessor[Image]
+
+  abstract class FileAccessor[VALUE] {
+    def apply(field: String): VALUE
+  }
+
   val outermostSpawner: OutermostSpawnerAccessor
 
   abstract class OutermostSpawnerAccessor {
@@ -47,10 +53,11 @@ abstract class Spirit {
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T)
   }
 
-  val image: FileAccessor[Image]
+  val innerSpawner: InnerSpawnerAccessor
 
-  abstract class FileAccessor[VALUE] {
-    def apply(field: String): VALUE
+  abstract class InnerSpawnerAccessor {
+    def apply[T <: InnerSpawner[Any]: ClassTag](field: String): T
+    def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T)
   }
 
   // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。
