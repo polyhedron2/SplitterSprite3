@@ -83,13 +83,20 @@ class FakeSpirit() extends Spirit {
     }
   }
 
-  def withString: FakeTypeDefiner1[String] =
+  val withString =
     new FakeTypeDefiner1[String](agent.Specificator.StringEntrySpec)
-  def withOutermostSpawner[
-      T1 <: OutermostSpawner[Any]: ClassTag]: FakeTypeDefiner1[T1] = {
-    val spawnerCls = Atmosphere.reflectionUtils.typeOf[T1]
-    new FakeTypeDefiner1[T1](
-      agent.Specificator.OutermostSpawnerEntrySpec(spawnerCls))
+
+  val withOutermostSpawner = new OutermostTypeDefinerCache() {
+    private var cache =
+      Map[Class[_ <: OutermostSpawner[Any]], FakeTypeDefiner1[_]]()
+    def apply[T1 <: OutermostSpawner[Any]: ClassTag] = {
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T1]
+      if (!cache.isDefinedAt(spawnerCls)) {
+        cache += spawnerCls -> new FakeTypeDefiner1[T1](
+          agent.Specificator.OutermostSpawnerEntrySpec(spawnerCls))
+      }
+      cache(spawnerCls).asInstanceOf[FakeTypeDefiner1[T1]]
+    }
   }
 
   class FakeTypeDefiner1[T1](
@@ -98,12 +105,17 @@ class FakeSpirit() extends Spirit {
       extends FakeTypeDefiner2[String, T1](
         agent.Specificator.InvisibleEntrySpec, keySpec)
       with TypeDefiner1[T1] {
-
-    def andInnerSpawner[T2 <: InnerSpawner[Any]: ClassTag]:
-        FakeTypeDefiner2[T1, T2] = {
-      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T2]
-      new FakeTypeDefiner2[T1, T2](
-        keySpec, agent.Specificator.InnerSpawnerEntrySpec(spawnerCls))
+    val andInnerSpawner = new InnerTypeDefinerCache {
+      private var cache =
+        Map[Class[_ <: InnerSpawner[Any]], FakeTypeDefiner2[T1, _]]()
+      def apply[T2 <: InnerSpawner[Any]: ClassTag] = {
+        val spawnerCls = Atmosphere.reflectionUtils.typeOf[T2]
+        if (!cache.isDefinedAt(spawnerCls)) {
+          cache += spawnerCls -> new FakeTypeDefiner2[T1, T2](
+            keySpec, agent.Specificator.InnerSpawnerEntrySpec(spawnerCls))
+        }
+        cache(spawnerCls).asInstanceOf[FakeTypeDefiner2[T1, T2]]
+      }
     }
   }
 
@@ -111,7 +123,7 @@ class FakeSpirit() extends Spirit {
         keySpec: agent.Specificator.SimpleEntrySpec,
         valueSpec: agent.Specificator.VisibleEntrySpec)
       extends TypeDefiner2[T1, T2] {
-    def kvSeq: FakeKVAccessor[T1, T2] =
+    val kvSeq: FakeKVAccessor[T1, T2] =
       new FakeKVAccessor[T1, T2](keySpec, valueSpec)
   }
 

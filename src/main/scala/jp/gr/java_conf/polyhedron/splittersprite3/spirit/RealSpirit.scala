@@ -188,35 +188,52 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  def withString: RealTypeDefiner1[String] =
+  val withString: RealTypeDefiner1[String] =
     new RealTypeDefiner1[String](x => x, "string")
-  def withOutermostSpawner[
-      T1 <: OutermostSpawner[Any]: ClassTag]: RealTypeDefiner1[T1] =
-    new RealTypeDefiner1[T1]({ case relativePath =>
-      OutermostRealSpirit(
-        resolveRelativePath(relativePath)).spawner.asInstanceOf[T1]
-    }, "outermost")
+
+  val withOutermostSpawner = new OutermostTypeDefinerCache {
+    private var cache =
+      Map[Class[_ <: OutermostSpawner[Any]], RealTypeDefiner1[_]]()
+    def apply[T1 <: OutermostSpawner[Any]: ClassTag] = {
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T1]
+      if (!cache.isDefinedAt(spawnerCls)) {
+        cache += spawnerCls -> new RealTypeDefiner1[T1]({ case relativePath =>
+          OutermostRealSpirit(
+            resolveRelativePath(relativePath)).spawner.asInstanceOf[T1]
+        }, "outermost")
+      }
+      cache(spawnerCls).asInstanceOf[RealTypeDefiner1[T1]]
+    }
+  }
 
   class RealTypeDefiner1[T1](raw2Key: String => T1, element: String)
       extends RealTypeDefiner2SimpleValue[String, T1](x => x, raw2Key, element)
       with TypeDefiner1[T1] {
-    def andInnerSpawner[T2 <: InnerSpawner[Any]: ClassTag]:
-        RealTypeDefiner2SpiritValue[T1, T2] =
-      new RealTypeDefiner2SpiritValue[T1, T2](
-        raw2Key, sp => sp.spawner.asInstanceOf[T2])
+    val andInnerSpawner = new InnerTypeDefinerCache {
+      private var cache = Map[
+        Class[_ <: InnerSpawner[Any]], RealTypeDefiner2SpiritValue[T1, _]]()
+      def apply[T2 <: InnerSpawner[Any]: ClassTag] = {
+        val spawnerCls = Atmosphere.reflectionUtils.typeOf[T2]
+        if (!cache.isDefinedAt(spawnerCls)) {
+          cache += spawnerCls -> new RealTypeDefiner2SpiritValue[T1, T2](
+            raw2Key, sp => sp.spawner.asInstanceOf[T2])
+        }
+        cache(spawnerCls).asInstanceOf[RealTypeDefiner2SpiritValue[T1, T2]]
+      }
+    }
   }
 
   class RealTypeDefiner2SimpleValue[T1, T2](
         raw2Key: String => T1, raw2Value: String => T2, element: String)
       extends TypeDefiner2[T1, T2] {
-    def kvSeq: RealKVAccessorSimpleValue[T1, T2] =
+    val kvSeq: RealKVAccessorSimpleValue[T1, T2] =
       new RealKVAccessorSimpleValue[T1, T2](raw2Key, raw2Value, element)
   }
 
   class RealTypeDefiner2SpiritValue[T1, T2](
         raw2Key: String => T1, spirit2Value: RealSpirit => T2)
       extends TypeDefiner2[T1, T2] {
-    def kvSeq: RealKVAccessorSpiritValue[T1, T2] =
+    val kvSeq: RealKVAccessorSpiritValue[T1, T2] =
       new RealKVAccessorSpiritValue[T1, T2](raw2Key, spirit2Value)
   }
 

@@ -20,6 +20,9 @@ class FakeSpiritSpec
     spirit.double("double field 2", 3.14)
     spirit.outermostSpawner[DummySpawner]("outermost field")
     spirit.innerSpawner[DummyInnerSpawner]("inner field")
+    spirit.withString.andInnerSpawner[DummyInnerSpawner].map("map field")
+    spirit.withOutermostSpawner[DummySpawner].seq("seq field")
+    spirit.withString.set("set field")
 
     spirit.specMap should be (Map(
       "string field 1" -> agent.Specificator.StringSpec(None),
@@ -33,7 +36,16 @@ class FakeSpiritSpec
       "outermost field" -> agent.Specificator.OutermostSpawnerSpec(
         classOf[DummySpawner]),
       "inner field" -> agent.Specificator.InnerSpawnerSpec(
-        classOf[DummyInnerSpawner])))
+        classOf[DummyInnerSpawner]),
+      "map field" -> agent.Specificator.KVSpec(
+        agent.Specificator.StringEntrySpec,
+        agent.Specificator.InnerSpawnerEntrySpec(classOf[DummyInnerSpawner])),
+      "seq field" -> agent.Specificator.KVSpec(
+        agent.Specificator.InvisibleEntrySpec,
+        agent.Specificator.OutermostSpawnerEntrySpec(classOf[DummySpawner])),
+      "set field" -> agent.Specificator.KVSpec(
+        agent.Specificator.InvisibleEntrySpec,
+        agent.Specificator.StringEntrySpec)))
   }
 
   "FakeSpirit" should "呼び出されたフィールドと型を記憶する" in {
@@ -112,6 +124,14 @@ class FakeSpiritSpec
     newInnerSpawner.id = 100
     spirit.innerSpawner("inner field") = newInnerSpawner
     assert(spirit.innerSpawner[DummyInnerSpawner]("inner field").id === 100)
+
+    assert(spirit.withString.andInnerSpawner[
+      DummyInnerSpawner].kvSeq("kv field") === Seq())
+    val newKVSeq = Seq(("key", newInnerSpawner))
+    spirit.withString.andInnerSpawner[
+      DummyInnerSpawner].kvSeq("kv field") = newKVSeq
+    assert(spirit.withString.andInnerSpawner[
+      DummyInnerSpawner].kvSeq("kv field") === Seq(("key", newInnerSpawner)))
   }
 
   "FakeSpirit" should "書き込まれた値を保持する" in {
@@ -154,5 +174,4 @@ class FakeSpiritSpec
       }
     }
   }
-
 }

@@ -61,12 +61,18 @@ abstract class Spirit {
   }
 
   def withString: TypeDefiner1[String]
-  def withOutermostSpawner[
-    T1 <: OutermostSpawner[Any]: ClassTag]: TypeDefiner1[T1]
+  def withOutermostSpawner: OutermostTypeDefinerCache
+
+  trait OutermostTypeDefinerCache {
+    def apply[T1 <: OutermostSpawner[Any]: ClassTag]: TypeDefiner1[T1]
+  }
 
   trait TypeDefiner1[T1] extends TypeDefiner2[String, T1] {
-    def andInnerSpawner[
-      T2 <: InnerSpawner[Any]: ClassTag]: TypeDefiner2[T1, T2]
+    def andInnerSpawner: InnerTypeDefinerCache
+
+    trait InnerTypeDefinerCache {
+      def apply[T2 <: InnerSpawner[Any]: ClassTag]: TypeDefiner2[T1, T2]
+    }
 
     def seq(field: String): Seq[T1] = kvSeq(field).map(_._2)
     def set(field: String): Set[T1] = seq(field).toSet

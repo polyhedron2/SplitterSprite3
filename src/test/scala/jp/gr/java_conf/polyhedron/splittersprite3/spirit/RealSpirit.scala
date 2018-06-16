@@ -119,6 +119,30 @@ object RealSpiritSpec {
     val fakeArgs = ()
   }
 
+  class MapSpawner(val spirit: Spirit) extends BaseSpawner() {
+    val map = spirit.withString.andInnerSpawner[
+      StandardInnerSpawner].map("map field")
+
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
+
+  class SeqSpawner(val spirit: Spirit) extends BaseSpawner() {
+    val seq = spirit.withOutermostSpawner[StandardSpawner].seq("seq field")
+
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
+
+  class SetSpawner(val spirit: Spirit) extends BaseSpawner() {
+    val set = spirit.withString.set("set field")
+
+    type SpawnArgs = Unit
+    def createInstance(x: Unit) = ()
+    val fakeArgs = ()
+  }
 }
 
 class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
@@ -552,6 +576,119 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           spiritMap("tested.spirit").spawner
         }
         assert(e.getCause().isInstanceOf[SpiritValueIsInvalid])
+      }
+    }
+  }
+
+  "RealSpirit" should "Mapを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.MapSpawner].getName()
+            }</spawner>
+            <inner field="map field">
+              <inner field="hoge">
+                <spawner field="spawner">{
+                  classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+                }</spawner>
+                <string field="string field">string_hoge</string>
+                <boolean field="boolean field">false</boolean>
+                <int field="int field">1000</int>
+                <double field="double field">1000.0</double>
+              </inner>
+              <inner field="fuga">
+                <spawner field="spawner">{
+                  classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+                }</spawner>
+                <string field="string field">string_fuga</string>
+                <boolean field="boolean field">true</boolean>
+                <int field="int field">2000</int>
+                <double field="double field">2000.0</double>
+              </inner>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.MapSpawner]
+        spawner.map.keySet should be (Set("hoge", "fuga"))
+        assert(spawner.map("hoge").string === "string_hoge")
+        assert(spawner.map("hoge").boolean === false)
+        assert(spawner.map("hoge").int === 1000)
+        assert(spawner.map("hoge").double === 1000.0)
+        assert(spawner.map("fuga").string === "string_fuga")
+        assert(spawner.map("fuga").boolean === true)
+        assert(spawner.map("fuga").int === 2000)
+        assert(spawner.map("fuga").double === 2000.0)
+      }
+    }
+  }
+
+  "RealSpirit" should "Seqを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.SeqSpawner].getName()
+            }</spawner>
+            <inner field="seq field">
+              <outermost field="000">referred_1.spirit</outermost>
+              <outermost field="001">referred_2.spirit</outermost>
+            </inner>
+          </root>,
+          "referred_1.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
+          </root>,
+          "referred_2.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">bar</string>
+            <boolean field="boolean field">false</boolean>
+            <int field="int field">24</int>
+            <double field="double field">2.71</double>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.SeqSpawner]
+        assert(spawner.seq.length === 2)
+        assert(spawner.seq(0).string === "foo")
+        assert(spawner.seq(0).boolean === true)
+        assert(spawner.seq(0).int === 42)
+        assert(spawner.seq(0).double === 3.14)
+        assert(spawner.seq(1).string === "bar")
+        assert(spawner.seq(1).boolean === false)
+        assert(spawner.seq(1).int === 24)
+        assert(spawner.seq(1).double === 2.71)
+      }
+    }
+  }
+  "RealSpirit" should "Setを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.SetSpawner].getName()
+            }</spawner>
+            <inner field="set field">
+              <string field="000">first</string>
+              <string field="001">second</string>
+              <string field="002">first</string>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.SetSpawner]
+        assert(spawner.set === Set("first", "second"))
       }
     }
   }
