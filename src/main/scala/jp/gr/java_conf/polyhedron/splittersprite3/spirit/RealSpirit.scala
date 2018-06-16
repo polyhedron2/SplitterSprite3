@@ -189,7 +189,7 @@ abstract class RealSpirit extends Spirit {
   }
 
   val withString: RealTypeDefiner1[String] =
-    new RealTypeDefiner1[String](x => x, "string")
+    new RealTypeDefiner1[String](x => x, "string", (a, b) => a < b)
 
   val withOutermostSpawner = new OutermostTypeDefinerCache {
     private var cache =
@@ -200,14 +200,17 @@ abstract class RealSpirit extends Spirit {
         cache += spawnerCls -> new RealTypeDefiner1[T1]({ case relativePath =>
           OutermostRealSpirit(
             resolveRelativePath(relativePath)).spawner.asInstanceOf[T1]
-        }, "outermost")
+        },
+        "outermost", (a, b) => a.spirit.patchablePath < b.spirit.patchablePath)
       }
       cache(spawnerCls).asInstanceOf[RealTypeDefiner1[T1]]
     }
   }
 
-  class RealTypeDefiner1[T1](raw2Key: String => T1, element: String)
-      extends RealTypeDefiner2SimpleValue[String, T1](x => x, raw2Key, element)
+  class RealTypeDefiner1[T1](
+        raw2Key: String => T1, element: String, ordering: (T1, T1) => Boolean)
+      extends RealTypeDefiner2SimpleValue[String, T1](
+        x => x, raw2Key, element, (a, b) => a < b)
       with TypeDefiner1[T1] {
     val andInnerSpawner = new InnerTypeDefinerCache {
       private var cache = Map[
@@ -216,7 +219,7 @@ abstract class RealSpirit extends Spirit {
         val spawnerCls = Atmosphere.reflectionUtils.typeOf[T2]
         if (!cache.isDefinedAt(spawnerCls)) {
           cache += spawnerCls -> new RealTypeDefiner2SpiritValue[T1, T2](
-            raw2Key, sp => sp.spawner.asInstanceOf[T2])
+            raw2Key, sp => sp.spawner.asInstanceOf[T2], ordering)
         }
         cache(spawnerCls).asInstanceOf[RealTypeDefiner2SpiritValue[T1, T2]]
       }
@@ -224,21 +227,25 @@ abstract class RealSpirit extends Spirit {
   }
 
   class RealTypeDefiner2SimpleValue[T1, T2](
-        raw2Key: String => T1, raw2Value: String => T2, element: String)
+        raw2Key: String => T1, raw2Value: String => T2,
+        element: String, ordering: (T1, T1) => Boolean)
       extends TypeDefiner2[T1, T2] {
     val kvSeq: RealKVAccessorSimpleValue[T1, T2] =
-      new RealKVAccessorSimpleValue[T1, T2](raw2Key, raw2Value, element)
+      new RealKVAccessorSimpleValue[T1, T2](
+        raw2Key, raw2Value, element, ordering)
   }
 
   class RealTypeDefiner2SpiritValue[T1, T2](
-        raw2Key: String => T1, spirit2Value: RealSpirit => T2)
+        raw2Key: String => T1, spirit2Value: RealSpirit => T2,
+        ordering: (T1, T1) => Boolean)
       extends TypeDefiner2[T1, T2] {
     val kvSeq: RealKVAccessorSpiritValue[T1, T2] =
-      new RealKVAccessorSpiritValue[T1, T2](raw2Key, spirit2Value)
+      new RealKVAccessorSpiritValue[T1, T2](raw2Key, spirit2Value, ordering)
   }
 
   class RealKVAccessorSimpleValue[T1, T2](
-        raw2Key: String => T1, raw2Value: String => T2, element: String)
+        raw2Key: String => T1, raw2Value: String => T2,
+        element: String, ordering: (T1, T1) => Boolean)
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
@@ -251,9 +258,8 @@ abstract class RealSpirit extends Spirit {
           // 文字列が設定されていなかった場合
           throw new SpiritValueIsNotFound(patchablePath, field)
         }
-
         (key, value)
-      }
+      }.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {
@@ -262,7 +268,8 @@ abstract class RealSpirit extends Spirit {
   }
 
   class RealKVAccessorSpiritValue[T1, T2](
-        raw2Key: String => T1, spirit2Value: RealSpirit => T2)
+        raw2Key: String => T1, spirit2Value: RealSpirit => T2,
+        ordering: (T1, T1) => Boolean)
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
@@ -271,7 +278,7 @@ abstract class RealSpirit extends Spirit {
         val key = raw2Key(entryField)
         val value = spirit2Value(kvSpirit(entryField))
         (key, value)
-      }
+      }.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {

@@ -634,8 +634,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
               classOf[RealSpiritSpec.SeqSpawner].getName()
             }</spawner>
             <inner field="seq field">
-              <outermost field="000">referred_1.spirit</outermost>
+              <!--フィールド名が順序が大きい順になっている-->
               <outermost field="001">referred_2.spirit</outermost>
+              <outermost field="000">referred_1.spirit</outermost>
             </inner>
           </root>,
           "referred_1.spirit" -> <root>
