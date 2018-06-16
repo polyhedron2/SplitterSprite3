@@ -15,37 +15,38 @@ class FakeSpirit() extends Spirit {
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, agent.Specificator.Spec]()
 
-  val string = new FakeValueAccessor("this is dummy string.",
+  val string = new FakeLiteralAccessor("this is dummy string.",
                                      agent.Specificator.StringSpec)
-  val boolean = new FakeValueAccessor(false, agent.Specificator.BooleanSpec)
-  val int = new FakeValueAccessor(1, agent.Specificator.IntSpec)
-  val double = new FakeValueAccessor(1.0, agent.Specificator.DoubleSpec)
+  val boolean = new FakeLiteralAccessor(false, agent.Specificator.BooleanSpec)
+  val int = new FakeLiteralAccessor(1, agent.Specificator.IntSpec)
+  val double = new FakeLiteralAccessor(1.0, agent.Specificator.DoubleSpec)
 
   // 読み書きメソッドの呼び出しをマップに記録するフェイクアクセサ
   // dummyDefaultValue: 読み出しを受けた際のダミー値
   // specFactory: デフォルト値のOptionを受け取り型情報(Specクラスインスタンス)
   //              を返す関数オブジェクト
-  class FakeValueAccessor[VALUE](
-        dummyDefaultValue: VALUE,
-        specFactory: Option[VALUE] => agent.Specificator.Spec)
-      extends ValueAccessor[VALUE] {
+  class FakeLiteralAccessor[LITERAL](
+        dummyDefaultValue: LITERAL,
+        specFactory: Option[LITERAL] => agent.Specificator.Spec)
+      extends LiteralAccessor[LITERAL] {
     // 書き込まれた値を保持するマップ
-    private var dummyValueMap = Map[String, VALUE]()
-    private def apply(field: String, defaultOpt: Option[VALUE]) = {
+    private var dummyValueMap = Map[String, LITERAL]()
+    private def apply(field: String, defaultOpt: Option[LITERAL]) = {
       specMap += (field -> specFactory(defaultOpt))
       dummyValueMap.get(field).orElse(defaultOpt).getOrElse(dummyDefaultValue)
     }
-    def apply(field: String): VALUE = apply(field, None)
-    def apply(field: String, default: VALUE): VALUE =
+    def apply(field: String): LITERAL = apply(field, None)
+    def apply(field: String, default: LITERAL): LITERAL =
       apply(field, Some(default))
-    def update(field: String, value: VALUE): Unit =
+    def update(field: String, value: LITERAL): Unit =
       dummyValueMap += (field -> value)
   }
 
   val image = new FakeFileAccessor[Image](Resources.noImage)
 
-  class FakeFileAccessor[VALUE](value: VALUE) extends FileAccessor[VALUE] {
-    def apply(field: String): VALUE = value
+  class FakeFileAccessor[FILE_TYPE](value: FILE_TYPE)
+      extends FileAccessor[FILE_TYPE] {
+    def apply(field: String): FILE_TYPE = value
   }
 
   val outermostSpawner = new OutermostSpawnerAccessor {
@@ -78,6 +79,55 @@ class FakeSpirit() extends Spirit {
     }
 
     def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T) {
+      dummyValueMap += field -> value
+    }
+  }
+
+  def withString: FakeTypeDefiner1[String] =
+    new FakeTypeDefiner1[String](agent.Specificator.StringEntrySpec)
+  def withOutermostSpawner[
+      T1 <: OutermostSpawner[Any]: ClassTag]: FakeTypeDefiner1[T1] = {
+    val spawnerCls = Atmosphere.reflectionUtils.typeOf[T1]
+    new FakeTypeDefiner1[T1](
+      agent.Specificator.OutermostSpawnerEntrySpec(spawnerCls))
+  }
+
+  class FakeTypeDefiner1[T1](
+        keySpec: agent.Specificator.SimpleEntrySpec
+                 with agent.Specificator.VisibleEntrySpec)
+      extends FakeTypeDefiner2[String, T1](
+        agent.Specificator.InvisibleEntrySpec, keySpec)
+      with TypeDefiner1[T1] {
+
+    def andInnerSpawner[T2 <: InnerSpawner[Any]: ClassTag]:
+        FakeTypeDefiner2[T1, T2] = {
+      val spawnerCls = Atmosphere.reflectionUtils.typeOf[T2]
+      new FakeTypeDefiner2[T1, T2](
+        keySpec, agent.Specificator.InnerSpawnerEntrySpec(spawnerCls))
+    }
+  }
+
+  class FakeTypeDefiner2[T1, T2](
+        keySpec: agent.Specificator.SimpleEntrySpec,
+        valueSpec: agent.Specificator.VisibleEntrySpec)
+      extends TypeDefiner2[T1, T2] {
+    def kvSeq: FakeKVAccessor[T1, T2] =
+      new FakeKVAccessor[T1, T2](keySpec, valueSpec)
+  }
+
+  class FakeKVAccessor[T1, T2](
+        keySpec: agent.Specificator.SimpleEntrySpec,
+        valueSpec: agent.Specificator.VisibleEntrySpec)
+      extends KVAccessor[T1, T2] {
+    // 書き込まれた値を保持するマップ
+    private var dummyValueMap = Map[String, Seq[(T1, T2)]]()
+
+    def apply(field: String): Seq[(T1, T2)] = {
+      specMap += (field -> agent.Specificator.KVSpec(keySpec, valueSpec))
+      dummyValueMap.get(field).getOrElse(Seq())
+    }
+
+    def update(field: String, value: Seq[(T1, T2)]) {
       dummyValueMap += field -> value
     }
   }

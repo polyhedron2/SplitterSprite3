@@ -29,21 +29,21 @@ abstract class Spirit {
   // val str = spirit.string("ほげ", "ABC")
   // 値の格納
   // spirit.string("ほげ") = "ABC"
-  val string: ValueAccessor[String]
-  val boolean: ValueAccessor[Boolean]
-  val int: ValueAccessor[Int]
-  val double: ValueAccessor[Double]
+  val string: LiteralAccessor[String]
+  val boolean: LiteralAccessor[Boolean]
+  val int: LiteralAccessor[Int]
+  val double: LiteralAccessor[Double]
 
-  abstract class ValueAccessor[VALUE] {
-    def apply(field: String): VALUE
-    def apply(field: String, default: VALUE): VALUE
-    def update(field: String, value: VALUE): Unit
+  abstract class LiteralAccessor[LITERAL] {
+    def apply(field: String): LITERAL
+    def apply(field: String, default: LITERAL): LITERAL
+    def update(field: String, value: LITERAL): Unit
   }
 
   val image: FileAccessor[Image]
 
-  abstract class FileAccessor[VALUE] {
-    def apply(field: String): VALUE
+  abstract class FileAccessor[FILE_TYPE] {
+    def apply(field: String): FILE_TYPE
   }
 
   val outermostSpawner: OutermostSpawnerAccessor
@@ -58,6 +58,28 @@ abstract class Spirit {
   abstract class InnerSpawnerAccessor {
     def apply[T <: InnerSpawner[Any]: ClassTag](field: String): T
     def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T)
+  }
+
+  def withString: TypeDefiner1[String]
+  def withOutermostSpawner[
+    T1 <: OutermostSpawner[Any]: ClassTag]: TypeDefiner1[T1]
+
+  trait TypeDefiner1[T1] extends TypeDefiner2[String, T1] {
+    def andInnerSpawner[
+      T2 <: InnerSpawner[Any]: ClassTag]: TypeDefiner2[T1, T2]
+
+    def seq(field: String): Seq[T1] = kvSeq(field).map(_._2)
+    def set(field: String): Set[T1] = seq(field).toSet
+  }
+
+  trait TypeDefiner2[T1, T2] {
+    def kvSeq: KVAccessor[T1, T2]
+    def map(field: String): Map[T1, T2] = kvSeq(field).toMap
+  }
+
+  trait KVAccessor[T1, T2] {
+    def apply(field: String): Seq[(T1, T2)]
+    def update(field: String, value: Seq[(T1, T2)]): Unit
   }
 
   // XML内のサブXMLアクセス用Spirit これをInnerSpiritと呼ぶこととする。

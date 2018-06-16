@@ -41,6 +41,20 @@ extends common.Cache[Class[_ <: Spawner[Any]], FakeSpirit] {
     spawnerCls: Class[_ <: OutermostSpawner[Any]]) extends Spec
   case class InnerSpawnerSpec(
     spawnerCls: Class[_ <: InnerSpawner[Any]]) extends Spec
+  case class KVSpec(
+    keySpec: SimpleEntrySpec, valueSpec: VisibleEntrySpec) extends Spec
+
+  sealed trait EntrySpec
+  sealed trait SimpleEntrySpec extends EntrySpec
+  sealed trait VisibleEntrySpec extends EntrySpec
+
+  case object InvisibleEntrySpec extends SimpleEntrySpec
+  case object StringEntrySpec extends SimpleEntrySpec with VisibleEntrySpec
+  case class OutermostSpawnerEntrySpec(
+      spawnerCls: Class[_ <: OutermostSpawner[Any]])
+    extends SimpleEntrySpec with VisibleEntrySpec
+  case class InnerSpawnerEntrySpec(
+    spawnerCls: Class[_ <: InnerSpawner[Any]]) extends VisibleEntrySpec
 
   class FailureToSpawnFakeInstance(
       cls: Class[_ <: Spawner[Any]], cause: Exception)

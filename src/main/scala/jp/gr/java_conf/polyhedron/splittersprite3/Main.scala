@@ -34,7 +34,7 @@ class Main() extends Application {
           Atmosphere.javaFXTaskQueue.enqueue(setUp)
 
           val spawner = spirit.OutermostRealSpirit(
-            "main.spirit").spawner.asInstanceOf[vanilla.ControllerSpawner]
+            "main.spirit").spawner.asInstanceOf[vanilla.CycleSpawner]
           val controller = spawner.spawn(())
           val haltGame = agent.ThreadPool.startAndGetHalter(
             new agent.ThreadPool.IntervalRunnable {

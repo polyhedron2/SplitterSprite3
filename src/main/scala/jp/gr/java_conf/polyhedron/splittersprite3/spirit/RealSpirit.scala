@@ -31,8 +31,10 @@ abstract class RealSpirit extends Spirit {
   def xml: Node
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  private def rawValueOpt(element: String, field: String) =
+  private def rawOpt(element: String, field: String) =
     (xml \ element).find(_.\("@field").text == field).map(_.text)
+
+  def fieldSeq(element: String) = (xml \ element).map(_.\("@field").text)
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
@@ -41,7 +43,7 @@ abstract class RealSpirit extends Spirit {
   def spawner: Spawner[Any] = if (isProcessingSpawner) {
     throw new SpawnerProcessingLoopException(patchablePath)
   } else {
-    val clsPath = rawValueOpt("spawner", "spawner").getOrElse {
+    val clsPath = rawOpt("spawner", "spawner").getOrElse {
       throw new SpawnerIsNotDefined(patchablePath)
     }
 
@@ -61,41 +63,42 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  val string = new RealValueAccessor[String] {
+  val string = new RealLiteralAccessor[String] {
     val element = "string"
-    def rawValue2Value(rawValue: String) = rawValue
-    def value2RawValue(value: String) = value
+    def raw2Literal(raw: String) = raw
+    def literal2Raw(value: String) = value
   }
 
-  val boolean = new RealValueAccessor[Boolean] {
+  val boolean = new RealLiteralAccessor[Boolean] {
     val element = "boolean"
-    def rawValue2Value(rawValue: String) = rawValue.toBoolean
-    def value2RawValue(value: Boolean) = value.toString
+    def raw2Literal(raw: String) = raw.toBoolean
+    def literal2Raw(value: Boolean) = value.toString
   }
 
-  val int = new RealValueAccessor[Int] {
+  val int = new RealLiteralAccessor[Int] {
     val element = "int"
-    def rawValue2Value(rawValue: String) = rawValue.toInt
-    def value2RawValue(value: Int) = value.toString
+    def raw2Literal(raw: String) = raw.toInt
+    def literal2Raw(value: Int) = value.toString
   }
 
-  val double = new RealValueAccessor[Double] {
+  val double = new RealLiteralAccessor[Double] {
     val element = "double"
-    def rawValue2Value(rawValue: String) = rawValue.toDouble
-    def value2RawValue(value: Double) = value.toString
+    def raw2Literal(raw: String) = raw.toDouble
+    def literal2Raw(value: Double) = value.toString
   }
 
-  abstract class RealValueAccessor[VALUE] extends ValueAccessor[VALUE] {
+  abstract class RealLiteralAccessor[LITERAL]
+      extends LiteralAccessor[LITERAL] {
     def element: String
 
     // XML上の文字列から指定のリテラルに変換
-    def rawValue2Value(rawValue: String): VALUE
+    def raw2Literal(raw: String): LITERAL
     // 指定のリテラルから文字列に変換
-    def value2RawValue(value: VALUE): String
+    def literal2Raw(value: LITERAL): String
 
-    def apply(field: String): VALUE = lock.synchronized {
+    def apply(field: String): LITERAL = lock.synchronized {
       try {
-        rawValueOpt(element, field).map(rawValue2Value)
+        rawOpt(element, field).map(raw2Literal)
       } catch {
         // 文字列をリテラルに変換できなかった場合
         case e: Exception =>
@@ -106,14 +109,14 @@ abstract class RealSpirit extends Spirit {
       throw new SpiritValueIsNotFound(patchablePath, field)
     }
 
-    def apply(field: String, default: VALUE): VALUE = try {
+    def apply(field: String, default: LITERAL): LITERAL = try {
       apply(field)
     } catch {
       // 文字列が設定されていなかった場合
       case e: SpiritValueIsNotFound => default
     }
 
-    def update(field: String, value: VALUE) {
+    def update(field: String, value: LITERAL) {
       throw new UnsupportedOperationException("TODO: 実装")
     }
   }
@@ -128,14 +131,14 @@ abstract class RealSpirit extends Spirit {
       new Image(Atmosphere.ioUtils.inputStream(patchablePath))
   }
 
-  abstract class RealFileAccessor[VALUE] extends FileAccessor[VALUE] {
+  abstract class RealFileAccessor[FILE_TYPE] extends FileAccessor[FILE_TYPE] {
     val element: String
-    def path2Value(patchablePath: String): VALUE
+    def path2Value(patchablePath: String): FILE_TYPE
 
-    def apply(field: String): VALUE =
+    def apply(field: String): FILE_TYPE =
       lock.synchronized {
         try {
-          rawValueOpt(element, field).map(resolveRelativePath).map(path2Value)
+          rawOpt(element, field).map(resolveRelativePath).map(path2Value)
         } catch {
           // 文字列をSpawnerに変換できなかった場合
           case e: Exception =>
@@ -151,7 +154,7 @@ abstract class RealSpirit extends Spirit {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
       lock.synchronized {
         try {
-          rawValueOpt("outermost", field).map(resolveRelativePath).map(
+          rawOpt("outermost", field).map(resolveRelativePath).map(
             OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
         } catch {
           // 文字列をSpawnerに変換できなかった場合
@@ -181,6 +184,80 @@ abstract class RealSpirit extends Spirit {
       }
 
     def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
+  }
+
+  def withString: RealTypeDefiner1[String] =
+    new RealTypeDefiner1[String](x => x)
+  def withOutermostSpawner[
+      T1 <: OutermostSpawner[Any]: ClassTag]: RealTypeDefiner1[T1] =
+    new RealTypeDefiner1[T1]({ case relativePath =>
+      OutermostRealSpirit(
+        resolveRelativePath(relativePath)).spawner.asInstanceOf[T1]
+    })
+
+  class RealTypeDefiner1[T1](raw2Key: String => T1)
+      extends RealTypeDefiner2SimpleValue[String, T1](x => x, raw2Key)
+      with TypeDefiner1[T1] {
+    def andInnerSpawner[T2 <: InnerSpawner[Any]: ClassTag]:
+        RealTypeDefiner2SpiritValue[T1, T2] =
+      new RealTypeDefiner2SpiritValue[T1, T2](
+        raw2Key, spirit => spirit.spawner.asInstanceOf[T2])
+  }
+
+  class RealTypeDefiner2SimpleValue[T1, T2](
+        raw2Key: String => T1, raw2Value: String => T2)
+      extends TypeDefiner2[T1, T2] {
+    def kvSeq: RealKVAccessorSimpleValue[T1, T2] =
+      new RealKVAccessorSimpleValue[T1, T2](raw2Key, raw2Value)
+  }
+
+  class RealTypeDefiner2SpiritValue[T1, T2](
+        raw2Key: String => T1, spirit2Value: RealSpirit => T2)
+      extends TypeDefiner2[T1, T2] {
+    def kvSeq: RealKVAccessorSpiritValue[T1, T2] =
+      new RealKVAccessorSpiritValue[T1, T2](raw2Key, spirit2Value)
+  }
+
+  class RealKVAccessorSimpleValue[T1, T2](
+        raw2Key: String => T1, raw2Value: String => T2)
+      extends KVAccessor[T1, T2] {
+    def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
+      val kvSpirit = innerSpiritMap(field)
+      val entryFieldSeq = kvSpirit.fieldSeq("key-value")
+      entryFieldSeq.map { case entryField =>
+        val key = raw2Key(entryField)
+        val value = {
+          rawOpt("key-value", entryField).map(raw2Value)
+        } getOrElse {
+          // 文字列が設定されていなかった場合
+          throw new SpiritValueIsNotFound(patchablePath, field)
+        }
+
+        (key, value)
+      }
+    }
+
+    def update(field: String, value: Seq[(T1, T2)]) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
+  }
+
+  class RealKVAccessorSpiritValue[T1, T2](
+        raw2Key: String => T1, spirit2Value: RealSpirit => T2)
+      extends KVAccessor[T1, T2] {
+    def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
+      val kvSpirit = innerSpiritMap(field)
+      val entryFieldSeq = kvSpirit.fieldSeq("key-value")
+      entryFieldSeq.map { case entryField =>
+        val key = raw2Key(entryField)
+        val value = spirit2Value(kvSpirit(entryField))
+        (key, value)
+      }
+    }
+
+    def update(field: String, value: Seq[(T1, T2)]) {
       throw new UnsupportedOperationException("TODO: 実装")
     }
   }
