@@ -31,7 +31,7 @@ abstract class RealSpirit extends Spirit {
   def xml: Node
 
   // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  private def rawOpt(element: String, field: String) =
+  protected def rawOpt(element: String, field: String) =
     (xml \ element).find(_.\("@field").text == field).map(_.text)
 
   def fieldSeq(element: String) = (xml \ element).map(_.\("@field").text)
@@ -189,28 +189,28 @@ abstract class RealSpirit extends Spirit {
   }
 
   def withString: RealTypeDefiner1[String] =
-    new RealTypeDefiner1[String](x => x)
+    new RealTypeDefiner1[String](x => x, "string")
   def withOutermostSpawner[
       T1 <: OutermostSpawner[Any]: ClassTag]: RealTypeDefiner1[T1] =
     new RealTypeDefiner1[T1]({ case relativePath =>
       OutermostRealSpirit(
         resolveRelativePath(relativePath)).spawner.asInstanceOf[T1]
-    })
+    }, "outermost")
 
-  class RealTypeDefiner1[T1](raw2Key: String => T1)
-      extends RealTypeDefiner2SimpleValue[String, T1](x => x, raw2Key)
+  class RealTypeDefiner1[T1](raw2Key: String => T1, element: String)
+      extends RealTypeDefiner2SimpleValue[String, T1](x => x, raw2Key, element)
       with TypeDefiner1[T1] {
     def andInnerSpawner[T2 <: InnerSpawner[Any]: ClassTag]:
         RealTypeDefiner2SpiritValue[T1, T2] =
       new RealTypeDefiner2SpiritValue[T1, T2](
-        raw2Key, spirit => spirit.spawner.asInstanceOf[T2])
+        raw2Key, sp => sp.spawner.asInstanceOf[T2])
   }
 
   class RealTypeDefiner2SimpleValue[T1, T2](
-        raw2Key: String => T1, raw2Value: String => T2)
+        raw2Key: String => T1, raw2Value: String => T2, element: String)
       extends TypeDefiner2[T1, T2] {
     def kvSeq: RealKVAccessorSimpleValue[T1, T2] =
-      new RealKVAccessorSimpleValue[T1, T2](raw2Key, raw2Value)
+      new RealKVAccessorSimpleValue[T1, T2](raw2Key, raw2Value, element)
   }
 
   class RealTypeDefiner2SpiritValue[T1, T2](
@@ -221,15 +221,15 @@ abstract class RealSpirit extends Spirit {
   }
 
   class RealKVAccessorSimpleValue[T1, T2](
-        raw2Key: String => T1, raw2Value: String => T2)
+        raw2Key: String => T1, raw2Value: String => T2, element: String)
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
-      val entryFieldSeq = kvSpirit.fieldSeq("key-value")
+      val entryFieldSeq = kvSpirit.fieldSeq(element)
       entryFieldSeq.map { case entryField =>
         val key = raw2Key(entryField)
         val value = {
-          rawOpt("key-value", entryField).map(raw2Value)
+          kvSpirit.rawOpt(element, entryField).map(raw2Value)
         } getOrElse {
           // 文字列が設定されていなかった場合
           throw new SpiritValueIsNotFound(patchablePath, field)
@@ -249,7 +249,7 @@ abstract class RealSpirit extends Spirit {
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
-      val entryFieldSeq = kvSpirit.fieldSeq("key-value")
+      val entryFieldSeq = kvSpirit.fieldSeq("inner")
       entryFieldSeq.map { case entryField =>
         val key = raw2Key(entryField)
         val value = spirit2Value(kvSpirit(entryField))
