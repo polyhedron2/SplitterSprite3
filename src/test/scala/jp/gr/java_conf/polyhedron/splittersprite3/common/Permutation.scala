@@ -223,31 +223,37 @@ class PermutationSpec
 
   "Permutation" should "置換を文字列に保存・復元可能" in {
     def assertToFromString[T](
-        permutation: common.Permutation[T],
+        permutation: common.Permutation[T], expected: String,
         targetEncoder: T => String, targetDecoder: String => T) {
       val text = common.Permutation.toString(permutation, targetEncoder)
+      assert(text === expected)
       assert(
         permutation === common.Permutation.fromString(text, targetDecoder))
     }
 
     assertToFromString(
       new common.Permutation(Map(1 -> 2, 2 -> 3, 3 -> 1)),
+      """1 \\ 2 \\ 3""",
       (x: Int) => x.toString, (x: String) => x.toInt)
     assertToFromString(
       new common.Permutation(Map(1 -> 2, 2 -> 3, 3 -> 1, 5 -> 6, 6 -> 5)),
+      """1 \\ 2 \\ 3 \ 5 \\ 6""",
       (x: Int) => x.toString, (x: String) => x.toInt)
     assertToFromString(
       new common.Permutation(
         Map(1 -> 2, 2 -> 3, 3 -> 1, 5 -> 6, 6 -> 5, 10 -> 12, 12 -> 10)),
+      """1 \\ 2 \\ 3 \ 10 \\ 12 \ 5 \\ 6""",
       (x: Int) => x.toString, (x: String) => x.toInt)
 
     assertToFromString(
       new common.Permutation(Map("hoge" -> "fuga", "fuga" -> "hoge")),
+      """fuga \\ hoge""",
       (x: String) => x, (x: String) => x)
     assertToFromString(
       new common.Permutation(Map(
         "hoge" -> "fuga", "fuga" -> "hoge",
         "foo" -> "bar", "bar" -> "baz", "baz" -> "foo")),
+      """bar \\ baz \\ foo \ fuga \\ hoge""",
       (x: String) => x, (x: String) => x)
   }
 

@@ -118,9 +118,21 @@ object Permutation {
 
   // Permutationを文字列に変換して保存可能にする
   def toString[T](
-      permutation: Permutation[T], targetEncoder: T => String): String =
-    encodeSeq(
-      permutation.cycleNotation.map(_.chain.map(targetEncoder)).map(encodeSeq))
+      permutation: Permutation[T], targetEncoder: T => String): String = {
+    val cycleTexts = permutation.cycleNotation.map { case cycle =>
+      val nonCanonical = cycle.chain.map(targetEncoder)
+      val minimum = nonCanonical.sorted.apply(0)
+      // 同じCycleからは同じ文字列がいつも生成されるように最小値を先頭に移動
+      val canonical =
+        (0 until nonCanonical.size).map { case i =>
+          nonCanonical((i + nonCanonical.indexOf(minimum)) % nonCanonical.size)
+        }
+      encodeSeq(canonical)
+    }
+    // 同じPermutationからは同じ文字列がいつも生成されるようにソート
+    // 互いに共通の入れ替え対象を持たないCyclePermutationは順序入れ替え可能
+    encodeSeq(cycleTexts.sorted)
+  }
 
   // 文字列からPermutationを復元する
   def fromString[T](
