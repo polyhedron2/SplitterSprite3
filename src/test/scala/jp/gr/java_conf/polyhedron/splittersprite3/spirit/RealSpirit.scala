@@ -212,6 +212,33 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
   }
 
+  "RealSpirit" should "親スピリットからもリテラル値の読み込みが可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.StandardSpawner]
+        assert(spawner.string === "foo")
+        assert(spawner.boolean === true)
+        assert(spawner.int === 42)
+        assert(spawner.double === 3.14)
+      }
+    }
+  }
+
   "RealSpirit" should
       "デフォルト値つきでリテラル値の読み込みが可能" in {
     // 設定値無しではデフォルト値が読み込まれる
@@ -262,6 +289,35 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.InnerValsSpawner].getName()
+            }</spawner>
+            <inner field="inner field">
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.InnerValsSpawner]
+        assert(spawner.string === "foo")
+        assert(spawner.boolean === true)
+        assert(spawner.int === 42)
+        assert(spawner.double === 3.14)
+      }
+    }
+  }
+
+  "RealSpirit" should "親のinner spiritでもリテラル値の読み込みが可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.InnerValsSpawner].getName()
             }</spawner>
@@ -335,6 +391,40 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
+            }</spawner>
+            <outermost field="outermost field">referred.spirit</outermost>
+          </root>,
+          "referred.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.ReferAnotherSpawner]
+        assert(spawner.anotherSpawner.string === "foo")
+        assert(spawner.anotherSpawner.boolean === true)
+        assert(spawner.anotherSpawner.int === 42)
+        assert(spawner.anotherSpawner.double === 3.14)
+      }
+    }
+  }
+
+  "RealSpirit" should
+      "親スピリットからでも他OutermostSpawnerの読み込みが可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.ReferAnotherSpawner].getName()
             }</spawner>
@@ -555,6 +645,40 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
   }
 
+  "RealSpirit" should "親スピリットからでもInnerSpawnerの読み込みが可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.ReferInnerSpawner].getName()
+            }</spawner>
+            <inner field="inner field">
+              <spawner field="spawner">{
+                classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+              }</spawner>
+              <string field="string field">foo</string>
+              <boolean field="boolean field">true</boolean>
+              <int field="int field">42</int>
+              <double field="double field">3.14</double>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.ReferInnerSpawner]
+        assert(spawner.anotherSpawner.isInstanceOf[
+          RealSpiritSpec.StandardInnerSpawner])
+        assert(spawner.anotherSpawner.string === "foo")
+        assert(spawner.anotherSpawner.boolean === true)
+        assert(spawner.anotherSpawner.int === 42)
+        assert(spawner.anotherSpawner.double === 3.14)
+      }
+    }
+  }
+
   "RealSpirit" should "InnerSpawnerの不正な設定値により例外" in {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
@@ -585,6 +709,54 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.MapSpawner].getName()
+            }</spawner>
+            <inner field="map field">
+              <inner field="hoge">
+                <spawner field="spawner">{
+                  classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+                }</spawner>
+                <string field="string field">string_hoge</string>
+                <boolean field="boolean field">false</boolean>
+                <int field="int field">1000</int>
+                <double field="double field">1000.0</double>
+              </inner>
+              <inner field="fuga">
+                <spawner field="spawner">{
+                  classOf[RealSpiritSpec.StandardInnerSpawner].getName()
+                }</spawner>
+                <string field="string field">string_fuga</string>
+                <boolean field="boolean field">true</boolean>
+                <int field="int field">2000</int>
+                <double field="double field">2000.0</double>
+              </inner>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.MapSpawner]
+        spawner.map.keySet should be (Set("hoge", "fuga"))
+        assert(spawner.map("hoge").string === "string_hoge")
+        assert(spawner.map("hoge").boolean === false)
+        assert(spawner.map("hoge").int === 1000)
+        assert(spawner.map("hoge").double === 1000.0)
+        assert(spawner.map("fuga").string === "string_fuga")
+        assert(spawner.map("fuga").boolean === true)
+        assert(spawner.map("fuga").int === 2000)
+        assert(spawner.map("fuga").double === 2000.0)
+      }
+    }
+  }
+
+  "RealSpirit" should "親スピリットからでもMapを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.MapSpawner].getName()
             }</spawner>
@@ -672,11 +844,88 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       }
     }
   }
+
+  "RealSpirit" should "親スピリットからでもSeqを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.SeqSpawner].getName()
+            }</spawner>
+            <inner field="seq field">
+              <!--フィールド名が順序が大きい順になっている-->
+              <outermost field="001">referred_2.spirit</outermost>
+              <outermost field="000">referred_1.spirit</outermost>
+            </inner>
+          </root>,
+          "referred_1.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">foo</string>
+            <boolean field="boolean field">true</boolean>
+            <int field="int field">42</int>
+            <double field="double field">3.14</double>
+          </root>,
+          "referred_2.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">bar</string>
+            <boolean field="boolean field">false</boolean>
+            <int field="int field">24</int>
+            <double field="double field">2.71</double>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.SeqSpawner]
+        assert(spawner.seq.length === 2)
+        assert(spawner.seq(0).string === "foo")
+        assert(spawner.seq(0).boolean === true)
+        assert(spawner.seq(0).int === 42)
+        assert(spawner.seq(0).double === 3.14)
+        assert(spawner.seq(1).string === "bar")
+        assert(spawner.seq(1).boolean === false)
+        assert(spawner.seq(1).int === 24)
+        assert(spawner.seq(1).double === 2.71)
+      }
+    }
+  }
+
   "RealSpirit" should "Setを読み込み可能" in {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.SetSpawner].getName()
+            }</spawner>
+            <inner field="set field">
+              <string field="000">first</string>
+              <string field="001">second</string>
+              <string field="002">first</string>
+            </inner>
+          </root>))
+
+        val spawner = spiritMap("tested.spirit").spawner.asInstanceOf[
+          RealSpiritSpec.SetSpawner]
+        assert(spawner.set === Set("first", "second"))
+      }
+    }
+  }
+
+  "RealSpirit" should "親スピリットからでもSetを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
             <spawner field="spawner">{
               classOf[RealSpiritSpec.SetSpawner].getName()
             }</spawner>

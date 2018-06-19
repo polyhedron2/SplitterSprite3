@@ -30,11 +30,20 @@ abstract class RealSpirit extends Spirit {
   val lock: AnyRef
   def xml: Node
 
-  // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
-  protected def rawOpt(element: String, field: String) =
-    (xml \ element).find(_.\("@field").text == field).map(_.text)
+  // 値の継承元となる親スピリット
+  def parentOpt: Option[RealSpirit]
+  def withoutParent[T](op: => T): T
 
-  def fieldSeq(element: String) = (xml \ element).map(_.\("@field").text)
+  // XMLファイル上に指定のfieldで文字列があればSomeでそれを返し、なければNone
+  // 親スピリットも確認
+  protected def rawOpt(element: String, field: String): Option[String] =
+    (xml \ element).find(_.\("@field").text == field).map(_.text).orElse {
+      parentOpt.flatMap(_.rawOpt(element, field))
+    }
+
+  protected def fieldSet(element: String): Set[String] =
+    (xml \ element).map(_.\("@field").text).toSet ++
+    parentOpt.map(_.fieldSet(element)).getOrElse(Set())
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
@@ -154,8 +163,8 @@ abstract class RealSpirit extends Spirit {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T =
       lock.synchronized {
         try {
-          rawOpt("outermost", field).map(resolveRelativePath).map(
-            OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
+          loadOutermostSpiritOpt(
+            "outermost", field).map(_.spawner.asInstanceOf[T])
         } catch {
           // 文字列をSpawnerに変換できなかった場合
           case e: Exception =>
@@ -170,6 +179,9 @@ abstract class RealSpirit extends Spirit {
       throw new UnsupportedOperationException("TODO: 実装")
     }
   }
+
+  protected def loadOutermostSpiritOpt(element: String, field: String) = rawOpt(
+    element, field).map(resolveRelativePath).map(OutermostRealSpirit(_))
 
   val innerSpawner = new InnerSpawnerAccessor {
     def apply[T <: InnerSpawner[Any]: ClassTag](field: String): T =
@@ -249,8 +261,8 @@ abstract class RealSpirit extends Spirit {
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
-      val entryFieldSeq = kvSpirit.fieldSeq(element)
-      entryFieldSeq.map { case entryField =>
+      val entryFieldSet = kvSpirit.fieldSet(element)
+      entryFieldSet.map { case entryField =>
         val key = raw2Key(entryField)
         val value = {
           kvSpirit.rawOpt(element, entryField).map(raw2Value)
@@ -259,7 +271,7 @@ abstract class RealSpirit extends Spirit {
           throw new SpiritValueIsNotFound(patchablePath, field)
         }
         (key, value)
-      }.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
+      }.toSeq.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {
@@ -273,12 +285,12 @@ abstract class RealSpirit extends Spirit {
       extends KVAccessor[T1, T2] {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
-      val entryFieldSeq = kvSpirit.fieldSeq("inner")
-      entryFieldSeq.map { case entryField =>
+      val entryFieldSet = kvSpirit.fieldSet("inner")
+      entryFieldSet.map { case entryField =>
         val key = raw2Key(entryField)
         val value = spirit2Value(kvSpirit(entryField))
         (key, value)
-      }.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
+      }.toSeq.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {
@@ -290,5 +302,5 @@ abstract class RealSpirit extends Spirit {
   val innerSpiritMap = new common.Cache[String, InnerRealSpirit] {
     def calc(field: String) = new InnerRealSpirit(RealSpirit.this, field)
   }
-  def apply(field: String): RealSpirit = innerSpiritMap(field)
+  def apply(field: String): InnerRealSpirit = innerSpiritMap(field)
 }

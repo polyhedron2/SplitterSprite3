@@ -30,5 +30,25 @@ class OutermostRealSpirit private (
 
   def xml: Elem = xmlHistory(historyIndex)
 
+  private var loadParent = true
+
+  lazy val parentOpt: Option[OutermostRealSpirit] = lock.synchronized {
+    if (loadParent) {
+      withoutParent { loadOutermostSpiritOpt("parent", "parent") }
+    } else {
+      None
+    }
+  }
+
+  def withoutParent[T](op: => T): T = {
+    val prevFlag = loadParent
+    try {
+      loadParent = false
+      op
+    } finally {
+      loadParent = prevFlag
+    }
+  }
+
   def save() { throw new UnsupportedOperationException("TODO: 実装") }
 }

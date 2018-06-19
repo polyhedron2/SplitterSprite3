@@ -18,5 +18,10 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
       XML.loadString("<root/>")
     }
 
+  def parentOpt: Option[InnerRealSpirit] =
+    outer.parentOpt.map(_.apply(fieldToThis))
+
+  def withoutParent[T](op: => T) = outer.withoutParent(op)
+
   def save(): Unit = outer.save()
 }
