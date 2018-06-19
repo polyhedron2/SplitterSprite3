@@ -113,8 +113,11 @@ object Permutation {
     texts.map(_.replace(escape, escape * 2)).mkString(joiner)
 
   // １つにまとめた文字列を分解する
-  def decodeSeq(encodedText: String): Seq[String] =
+  def decodeSeq(encodedText: String): Seq[String] = if (encodedText == "") {
+    Seq()
+  } else {
     encodedText.split(splitter).map(_.replace(escape * 2, escape))
+  }
 
   // Permutationを文字列に変換して保存可能にする
   def toString[T](
@@ -138,7 +141,7 @@ object Permutation {
   def fromString[T](
       encodedText: String, targetDecoder: String => T): Permutation[T] = 
     decodeSeq(encodedText).map(decodeSeq).map(_.map(targetDecoder)).map(
-      new CyclePermutation(_).asInstanceOf[Permutation[T]]).reduce(_ * _)
+      new CyclePermutation(_)).fold(new Permutation(Map()))(_ * _)
 
   // seqが(order *: p)による順序通りとなるような、Permutation pを逆算
   def extract[T](seq: Seq[T], order: (T, T) => Boolean) = {

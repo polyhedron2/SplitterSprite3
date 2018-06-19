@@ -219,6 +219,30 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
+  lazy val permutation = new PermutationAccessor()
+
+  class PermutationAccessor() {
+    def apply[T](raw2Key: String => T): common.Permutation[T] = {
+      // 親のスピリット抜きでのPermutation
+      val thisPerm = withoutParent { rawOpt("permutation", "permutation") }.map(
+          common.Permutation.fromString(_, raw2Key)).getOrElse {
+        // 設定がなければ恒等置換
+        new common.Permutation(Map())
+      }
+      // 親スピリットから祖先分をすべて合成したPermutation
+      val parentPerm = parentOpt.map(_.permutation(raw2Key)).getOrElse {
+        // 設定がなければ恒等置換
+        new common.Permutation(Map())
+      }
+      // 自分を含め祖先分をすべて合成したPermutation
+      thisPerm * parentPerm
+    }
+
+    def update[T](key2Raw: T => String) {
+      throw new UnsupportedOperationException("TODO: 実装")
+    }
+  }
+
   class RealTypeDefiner1[T1](
         raw2Key: String => T1, element: String, ordering: (T1, T1) => Boolean)
       extends RealTypeDefiner2SimpleValue[String, T1](
@@ -262,6 +286,8 @@ abstract class RealSpirit extends Spirit {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
       val entryFieldSet = kvSpirit.fieldSet(element)
+      val perm = kvSpirit.permutation(raw2Key)
+
       entryFieldSet.map { case entryField =>
         val key = raw2Key(entryField)
         val value = {
@@ -271,7 +297,7 @@ abstract class RealSpirit extends Spirit {
           throw new SpiritValueIsNotFound(patchablePath, field)
         }
         (key, value)
-      }.toSeq.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
+      }.toSeq.sortWith((kv1, kv2) => (ordering *: perm)(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {
@@ -286,11 +312,13 @@ abstract class RealSpirit extends Spirit {
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
       val kvSpirit = innerSpiritMap(field)
       val entryFieldSet = kvSpirit.fieldSet("inner")
+      val perm = kvSpirit.permutation(raw2Key)
+
       entryFieldSet.map { case entryField =>
         val key = raw2Key(entryField)
         val value = spirit2Value(kvSpirit(entryField))
         (key, value)
-      }.toSeq.sortWith((kv1, kv2) => ordering(kv1._1, kv2._1))
+      }.toSeq.sortWith((kv1, kv2) => (ordering *: perm)(kv1._1, kv2._1))
     }
 
     def update(field: String, value: Seq[(T1, T2)]) {

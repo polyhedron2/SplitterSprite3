@@ -232,6 +232,13 @@ class PermutationSpec
     }
 
     assertToFromString(
+      new common.Permutation(Map()), "",
+      (x: String) => x, (x: String) => x)
+    assertToFromString(
+      new common.Permutation(Map()), "",
+      (x: Int) => x.toString, (x: String) => x.toInt)
+
+    assertToFromString(
       new common.Permutation(Map(1 -> 2, 2 -> 3, 3 -> 1)),
       """1 \\ 2 \\ 3""",
       (x: Int) => x.toString, (x: String) => x.toInt)

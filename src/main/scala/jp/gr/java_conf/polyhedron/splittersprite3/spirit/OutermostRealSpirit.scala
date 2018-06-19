@@ -32,7 +32,7 @@ class OutermostRealSpirit private (
 
   private var loadParent = true
 
-  lazy val parentOpt: Option[OutermostRealSpirit] = lock.synchronized {
+  def parentOpt: Option[OutermostRealSpirit] = lock.synchronized {
     if (loadParent) {
       withoutParent { loadOutermostSpiritOpt("parent", "parent") }
     } else {

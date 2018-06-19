@@ -5,6 +5,7 @@ import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   OutermostSpawner, InnerSpawner}
 import jp.gr.java_conf.polyhedron.splittersprite3.spirit.{
@@ -892,6 +893,183 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(spawner.seq(1).boolean === false)
         assert(spawner.seq(1).int === 24)
         assert(spawner.seq(1).double === 2.71)
+      }
+    }
+  }
+
+  "RealSpirit" should "Permutationを読み込み可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <permutation field="permutation"></permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.Permutation(Map()))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <permutation field="permutation">hoge \\ fuga</permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga")))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <permutation field="permutation">hoge \\ fuga \\ piyo</permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga", "piyo")))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <permutation field="permutation">{
+              """hoge \\ fuga \\ piyo \ foo \\ bar"""
+            }</permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga", "piyo")) *:
+          new common.CyclePermutation(Seq("foo", "bar")))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+            <permutation field="permutation">hoge \\ fuga \\ piyo</permutation>
+          </root>,
+          "parent.spirit" -> <root>
+            <permutation field="permutation">foo \\ bar</permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga", "piyo")) *:
+          new common.CyclePermutation(Seq("foo", "bar")))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "grandchild.spirit" -> <root>
+            <parent field="parent">child.spirit</parent>
+            <permutation field="permutation">piyo \\ quux</permutation>
+          </root>,
+          "child.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+            <permutation field="permutation">fuga \\ piyo</permutation>
+          </root>,
+          "parent.spirit" -> <root>
+            <permutation field="permutation">hoge \\ fuga</permutation>
+          </root>))
+
+        assert(
+          spiritMap("parent.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga")))
+
+        assert(
+          spiritMap("child.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "piyo", "fuga")))
+
+        assert(
+          spiritMap("grandchild.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "quux", "piyo", "fuga")))
+      }
+
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "tested.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
+            <permutation field="permutation">hoge \\ fuga \\ piyo</permutation>
+          </root>))
+
+        assert(
+          spiritMap("tested.spirit").permutation[String](x => x) ===
+          new common.CyclePermutation(Seq("hoge", "fuga", "piyo")))
+      }
+    }
+  }
+
+  "RealSpirit" should "Seqの順序入れ替えを表現可能" in {
+    Atmosphere.withTestIOUtils {
+      agent.LoanAgent.loan {
+        val spiritMap = prepare(Map(
+          "grandchild.spirit" -> <root>
+            <parent field="parent">child.spirit</parent>
+            <inner field="seq field">
+              <permutation field="permutation">002 \\ 003</permutation>
+            </inner>
+          </root>,
+          "child.spirit" -> <root>
+            <parent field="parent">parent.spirit</parent>
+          </root>,
+          "parent.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.SeqSpawner].getName()
+            }</spawner>
+            <inner field="seq field">
+              <permutation field="permutation">001 \\ 002</permutation>
+              <outermost field="001">referred_1.spirit</outermost>
+              <outermost field="002">referred_2.spirit</outermost>
+              <outermost field="003">referred_3.spirit</outermost>
+            </inner>
+          </root>,
+          "referred_1.spirit" -> <root>
+            <parent field="parent">referred_parent.spirit</parent>
+            <int field="int field">1</int>
+          </root>,
+          "referred_2.spirit" -> <root>
+            <parent field="parent">referred_parent.spirit</parent>
+            <int field="int field">2</int>
+          </root>,
+          "referred_3.spirit" -> <root>
+            <parent field="parent">referred_parent.spirit</parent>
+            <int field="int field">3</int>
+          </root>,
+          "referred_parent.spirit" -> <root>
+            <spawner field="spawner">{
+              classOf[RealSpiritSpec.StandardSpawner].getName()
+            }</spawner>
+            <string field="string field">dummy</string>
+            <boolean field="boolean field">false</boolean>
+            <double field="double field">0.0</double>
+          </root>))
+
+        val parentSpawner = spiritMap(
+          "parent.spirit").spawner.asInstanceOf[RealSpiritSpec.SeqSpawner]
+        assert(parentSpawner.seq.length === 3)
+        assert(parentSpawner.seq(0).int === 2)
+        assert(parentSpawner.seq(1).int === 1)
+        assert(parentSpawner.seq(2).int === 3)
+
+        val childSpawner = spiritMap(
+          "child.spirit").spawner.asInstanceOf[RealSpiritSpec.SeqSpawner]
+        assert(childSpawner.seq.length === 3)
+        assert(childSpawner.seq(0).int === 2)
+        assert(childSpawner.seq(1).int === 1)
+        assert(childSpawner.seq(2).int === 3)
+
+        val grandchildSpawner = spiritMap(
+          "grandchild.spirit").spawner.asInstanceOf[RealSpiritSpec.SeqSpawner]
+        assert(grandchildSpawner.seq.length === 3)
+        assert(grandchildSpawner.seq(0).int === 2)
+        assert(grandchildSpawner.seq(1).int === 3)
+        assert(grandchildSpawner.seq(2).int === 1)
       }
     }
   }
