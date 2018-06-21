@@ -2,9 +2,10 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
+import scala.xml.{Elem}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
-  OutermostSpawner, InnerSpawner
+  OutermostSpawner, InnerSpawner, Spawner,
 }
 
 // XMLファイルへの読み書きを定める抽象クラス
@@ -14,6 +15,11 @@ abstract class Spirit {
 
   // XMLファイル名
   def name: String = patchablePath.split('/').last
+
+  def spawner: Spawner[Any]
+
+  // 親スピリットのXMLと合わせたXML
+  def compositeXML: Elem
 
   // 各リテラル用のアクセサ
   // 例：

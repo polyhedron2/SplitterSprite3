@@ -2,6 +2,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
 import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
+import scala.xml.{Elem, XML}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere, Resources}
@@ -14,6 +15,10 @@ class FakeSpirit() extends Spirit {
   val patchablePath = s"bogus/${this.toString}.xml"
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, agent.Specificator.Spec]()
+
+  lazy val spawner = Spawner.fakeSpawner[Spawner[Any]]
+
+  val compositeXML: Elem = XML.loadString("<root/>")
 
   val string = new FakeLiteralAccessor("this is dummy string.",
                                      agent.Specificator.StringSpec)

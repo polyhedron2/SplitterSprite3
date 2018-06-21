@@ -1,7 +1,8 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
-import java.io.{Reader, PrintStream}
-import java.nio.file.{FileSystems, Files, Paths, Path => JPath}
+import java.io.{Reader, Writer, PrintStream}
+import java.nio.file.{
+  FileSystems, Files, Paths, Path => JPath, StandardOpenOption}
 import scala.collection.JavaConverters._
 
 // SplitterSprite3でのディレクトリ構造は以下の構造とする
@@ -220,11 +221,21 @@ abstract class IOUtils {
   }
 
   def withPatchedReader[T](patchablePath: String)(op: Reader => T): T = {
-    // UTF-8として読み込み
+    // UTF-8として存在するうちの最新パッチから読み込み
     val reader = Files.newBufferedReader(searchPatchedFile(patchablePath))
     try { op(reader) } finally { reader.close() }
   }
 
   def inputStream(patchablePath: String) =
     Files.newInputStream(searchPatchedFile(patchablePath))
+
+  def withPatchedWriter[T](patchablePath: String)(op: Writer => T): T = {
+    val targetPath = appliedPatchDirList.head.resolve(patchablePath)
+    Files.createDirectories(targetPath.getParent())
+    if (!Files.exists(targetPath)) { Files.createFile(targetPath) }
+
+    // UTF-8として現在のパッチに書き込み
+    val writer = Files.newBufferedWriter(targetPath, StandardOpenOption.WRITE)
+    try { op(writer) } finally { writer.close() }
+  }
 }

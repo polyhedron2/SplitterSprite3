@@ -1,16 +1,27 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import scala.xml.{Elem, XML}
+import scala.xml.{Elem, XML, PrettyPrinter}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
+
+class ChickenOrEggException(spirit: OutermostRealSpirit) extends Exception({
+  val loopInfo = spirit.ancestors.map(_.patchablePath).mkString(" -> ")
+  s"スピリットの親子関係がループを起こしています。(${loopInfo})"
+})
 
 object OutermostRealSpirit {
   private val body = new common.Cache[String, OutermostRealSpirit] {
     def calc(patchablePath: String) = new OutermostRealSpirit(patchablePath)
   }
 
-  def apply(patchablePath: String): OutermostRealSpirit = body(patchablePath)
+  def apply(patchablePath: String,
+            requireFile: Boolean = true): OutermostRealSpirit = {
+    val ret = body(patchablePath)
+    if (requireFile) { ret.load() }
+    ret
+  }
+
   def clear() { body.clear() }
 }
 
@@ -25,20 +36,44 @@ class OutermostRealSpirit private (
 
   // XMLの編集履歴
   var historyIndex = 0
-  var xmlHistory = Map(
-    0 -> Atmosphere.ioUtils.withPatchedReader(patchablePath)(XML.load))
+  var xmlHistory = Map[Int, Elem](0 -> <root/>)
 
-  def xml: Elem = xmlHistory(historyIndex)
+  def xml: Elem = lock.synchronized { xmlHistory(historyIndex) }
+
+  def xml_=(newXML: Elem) {
+    lock.synchronized {
+      xmlHistory += (historyIndex -> newXML)
+    }
+  }
 
   private var loadParent = true
 
-  def parentOpt: Option[OutermostRealSpirit] = lock.synchronized {
+  def parentOpt: Option[OutermostRealSpirit] = {
     if (loadParent) {
-      withoutParent { loadOutermostSpiritOpt("parent", "parent") }
+      withoutParent {
+        rawOpt("parent", "parent").map(resolve).map(OutermostRealSpirit(_))
+      }
     } else {
       None
     }
   }
+
+  def parentOpt_=(newParentOpt: Option[OutermostRealSpirit]) {
+    newParentOpt.foreach { case newParent =>
+      val ancestorPaths = newParent.ancestors.map(_.patchablePath).toSet
+      if (ancestorPaths(patchablePath)) {
+        throw new ChickenOrEggException(this)
+      }
+    }
+
+    rawOpt("parent", "parent") =
+      newParentOpt.map(_.patchablePath).map(relativize)
+  }
+
+  // 自分を含めた祖先一覧
+  def ancestors: List[OutermostRealSpirit] = parentOpt.map { case parent =>
+    this :: parent.ancestors
+  }.getOrElse { List(this) }
 
   def withoutParent[T](op: => T): T = {
     val prevFlag = loadParent
@@ -50,5 +85,12 @@ class OutermostRealSpirit private (
     }
   }
 
-  def save() { throw new UnsupportedOperationException("TODO: 実装") }
+  def load() {
+    xml = Atmosphere.ioUtils.withPatchedReader(patchablePath)(XML.load)
+  }
+
+  def save() {
+    val formatted = new PrettyPrinter(80, 2).format(xml)
+    Atmosphere.ioUtils.withPatchedWriter(patchablePath)(_.write(formatted))
+  }
 }

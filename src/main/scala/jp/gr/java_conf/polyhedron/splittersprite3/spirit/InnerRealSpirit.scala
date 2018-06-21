@@ -1,6 +1,6 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import scala.xml.{XML, Node}
+import scala.xml.{Elem, XML}
 
 // 他XMLの内部XMLを読み書きするRealSpirit
 // outer: １つ外側のRealSpirit
@@ -12,11 +12,19 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
   val lock = outer.lock
   val patchablePath = s"${outer.patchablePath}[${fieldToThis}]"
 
-  def xml: Node =
-    (outer.xml \ "inner").find(_.\("@field").text == fieldToThis).getOrElse {
+  def xml: Elem = lock.synchronized {
+    (outer.xml \ "inner").toSeq.map(_.asInstanceOf[Elem]).find(
+        _.\("@field").text == fieldToThis).getOrElse {
       // 親がこのInnerRealSpirit用のXMLを持たない場合は空のXMLを読む
-      XML.loadString("<root/>")
+      XML.loadString("<inner field=\"" + fieldToThis + "\"></inner>")
     }
+  }
+
+  def xml_=(newXML: Elem) {
+    lock.synchronized {
+      outer.xml = updatedXML(outer.xml, "inner", fieldToThis, Some(newXML))
+    }
+  }
 
   def parentOpt: Option[InnerRealSpirit] =
     outer.parentOpt.map(_.apply(fieldToThis))
