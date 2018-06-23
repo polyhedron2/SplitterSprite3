@@ -2,12 +2,12 @@ package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 import java.io.{PrintStream, ByteArrayOutputStream}
 import java.nio.charset.{StandardCharsets}
-import java.nio.file.{Files, Paths, Path => JPath}
+import java.nio.file.{Files, Paths, Path}
 import scala.collection.JavaConverters._
 
 // gameJarPathFromGameDirPath: TmpDirから実行ファイルへの相対パス
 class TestIOUtils(
-    gameDirPathFromTestDirPath: JPath, gameJarPathFromGameDirPath: JPath)
+    gameDirPathFromTestDirPath: Path, gameJarPathFromGameDirPath: Path)
     extends IOUtils {
   private val tmpDirPath =
     Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath()
@@ -20,7 +20,7 @@ class TestIOUtils(
   }
 
   def exit() {
-    def recursiveDelete(path: JPath) {
+    def recursiveDelete(path: Path) {
       childrenList(path).foreach(recursiveDelete)
       Files.delete(path)
     }

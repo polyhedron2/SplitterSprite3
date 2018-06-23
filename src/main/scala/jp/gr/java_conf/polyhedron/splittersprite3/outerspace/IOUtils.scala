@@ -2,7 +2,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 import java.io.{Reader, Writer, PrintStream}
 import java.nio.file.{
-  FileSystems, Files, Paths, Path => JPath, StandardOpenOption}
+  FileSystems, Files, Paths, Path, StandardOpenOption}
 import scala.collection.JavaConverters._
 
 // SplitterSprite3でのディレクトリ構造は以下の構造とする
@@ -42,11 +42,11 @@ import scala.collection.JavaConverters._
 object IOUtils {
   class InvalidVersionName(val name: String)
     extends Exception(s"バージョン名として${name}は不正です。")
-  class InvalidVersionDirectory(val path: JPath)
+  class InvalidVersionDirectory(val path: Path)
     extends Exception(s"バージョンディレクトリとして${path}は不正です。")
-  class InvalidPatchDirectory(val path: JPath)
+  class InvalidPatchDirectory(val path: Path)
     extends Exception(s"パッチディレクトリとして${path}は不正です。")
-  class InvalidPatchList(val path: JPath)
+  class InvalidPatchList(val path: Path)
     extends Exception(s"${path}へのパッチディレクトリの配置が不正です。")
   class FileIsNotFound(val patchablePath: String)
     extends Exception(s"${patchablePath}にファイルが存在しません。")
@@ -57,10 +57,10 @@ abstract class IOUtils {
   val stderr: PrintStream
 
   // 実行ファイルのパス
-  val gameJarPath: JPath
+  val gameJarPath: Path
 
-  lazy val verOrPatchDirPath: JPath = gameJarPath.getParent()
-  lazy val gameDirPath: JPath = verOrPatchDirPath.getParent()
+  lazy val verOrPatchDirPath: Path = gameJarPath.getParent()
+  lazy val gameDirPath: Path = verOrPatchDirPath.getParent()
 
   lazy val version: (Int, Int, Int) =
     if (isVersionDirectory(verOrPatchDirPath)) {
@@ -73,17 +73,17 @@ abstract class IOUtils {
 
   lazy val versionName = s"ver${version._1}.${version._2}.${version._3}"
 
-  lazy val appliedPatchDirList: List[JPath] =
+  lazy val appliedPatchDirList: List[Path] =
     appliedPatchDirList(verOrPatchDirPath, version)
 
-  def tailNameOf(jPath: JPath): String =
-    jPath.getName(jPath.getNameCount() - 1).toString
+  def tailNameOf(path: Path): String =
+    path.getName(path.getNameCount() - 1).toString
 
   def hasZenkaku(str: String): Boolean = str.length != str.getBytes().length
 
-  def childrenList(jPath: JPath): List[JPath] = {
-    if (Files.isDirectory(jPath)) {
-      val stream = Files.newDirectoryStream(jPath)
+  def childrenList(path: Path): List[Path] = {
+    if (Files.isDirectory(path)) {
+      val stream = Files.newDirectoryStream(path)
       try { stream.iterator().asScala.toList } finally { stream.close() }
     } else { Nil }
   }
@@ -117,30 +117,30 @@ abstract class IOUtils {
   }
 
   // "verA.B.C"を(A, B, C)の整数３つ組にパース
-  def parseVersionDirectory(jPath: JPath): (Int, Int, Int) = try {
-    parseVersionName(tailNameOf(jPath))
+  def parseVersionDirectory(path: Path): (Int, Int, Int) = try {
+    parseVersionName(tailNameOf(path))
   } catch {
     case e: IOUtils.InvalidVersionName =>
-      throw new IOUtils.InvalidVersionDirectory(jPath)
+      throw new IOUtils.InvalidVersionDirectory(path)
   }
 
   // "patch_from_verA.B.C_to_verX.Y.Z"を((A, B, C), (X, Y, Z))にパース
-  def parsePatchDirectory(jPath: JPath): ((Int, Int, Int), (Int, Int, Int)) =
+  def parsePatchDirectory(path: Path): ((Int, Int, Int), (Int, Int, Int)) =
     try {
-      val name = tailNameOf(jPath)
+      val name = tailNameOf(path)
 
       // 全角文字を混入してはいけない
-      if (hasZenkaku(name)) { throw new IOUtils.InvalidPatchDirectory(jPath) }
+      if (hasZenkaku(name)) { throw new IOUtils.InvalidPatchDirectory(path) }
 
       if (!name.startsWith("patch_from_")) {
-        throw new IOUtils.InvalidPatchDirectory(jPath)
+        throw new IOUtils.InvalidPatchDirectory(path)
       }
       val splitStrs = name.split('_')
       if (splitStrs.length != 5) {
-        throw new IOUtils.InvalidPatchDirectory(jPath)
+        throw new IOUtils.InvalidPatchDirectory(path)
       }
       if (splitStrs(3) != "to") {
-        throw new IOUtils.InvalidPatchDirectory(jPath)
+        throw new IOUtils.InvalidPatchDirectory(path)
       }
 
       val fromVersionIndex = 2
@@ -151,13 +151,13 @@ abstract class IOUtils {
 
       // パッチバージョンは増加させる方向に適用されなければならない
       if (!isIncreasing(fromVersion, toVersion)) {
-        throw new IOUtils.InvalidPatchDirectory(jPath)
+        throw new IOUtils.InvalidPatchDirectory(path)
       }
 
       (fromVersion, toVersion)
     } catch {
       case e: IOUtils.InvalidVersionName =>
-        throw new IOUtils.InvalidPatchDirectory(jPath)
+        throw new IOUtils.InvalidPatchDirectory(path)
     }
 
   def isIncreasing(
@@ -168,17 +168,17 @@ abstract class IOUtils {
           fromVersion._2 == toVersion._2 && {
             fromVersion._3 < toVersion._3 } } } }
 
-  def isVersionDirectory(jPath: JPath): Boolean =
-    Files.isDirectory(jPath) && (try {
-      parseVersionDirectory(jPath)
+  def isVersionDirectory(path: Path): Boolean =
+    Files.isDirectory(path) && (try {
+      parseVersionDirectory(path)
       true
     } catch {
       case e: IOUtils.InvalidVersionDirectory => false
     })
 
-  def isPatchDirectory(jPath: JPath): Boolean =
-    Files.isDirectory(jPath) && (try {
-      parsePatchDirectory(jPath)
+  def isPatchDirectory(path: Path): Boolean =
+    Files.isDirectory(path) && (try {
+      parsePatchDirectory(path)
       true
     } catch {
       case e: IOUtils.InvalidPatchDirectory => false
@@ -186,18 +186,18 @@ abstract class IOUtils {
 
   // 指定パスが指定バージョンにつながっていればパッチチェーンを返す
   private def appliedPatchDirList(
-      jPath: JPath, toVersion: (Int, Int, Int)): List[JPath] =
-    if (isVersionDirectory(jPath) &&
-        parseVersionDirectory(jPath) == toVersion) {
-      List(jPath)
-    } else if (isPatchDirectory(jPath) &&
-               parsePatchDirectory(jPath)._2 == toVersion) {
-      val fromVersion = parsePatchDirectory(jPath)._1
+      path: Path, toVersion: (Int, Int, Int)): List[Path] =
+    if (isVersionDirectory(path) &&
+        parseVersionDirectory(path) == toVersion) {
+      List(path)
+    } else if (isPatchDirectory(path) &&
+               parsePatchDirectory(path)._2 == toVersion) {
+      val fromVersion = parsePatchDirectory(path)._1
 
       val dirList = childrenList(gameDirPath)
 
       // dirList内のディレクトリからパッチチェーンを探す
-      def findAppliedPatchDirList(dirList: List[JPath]): List[JPath] =
+      def findAppliedPatchDirList(dirList: List[Path]): List[Path] =
         dirList match {
           case head :: tail => try {
             appliedPatchDirList(head, fromVersion)
@@ -205,19 +205,19 @@ abstract class IOUtils {
             // 試したディレクトリで失敗したら次のディレクトリに進む
             case e: IOUtils.InvalidPatchList => findAppliedPatchDirList(tail)
           }
-          case Nil => throw new IOUtils.InvalidPatchList(jPath)
+          case Nil => throw new IOUtils.InvalidPatchList(path)
         }
 
-      jPath :: findAppliedPatchDirList(dirList)
+      path :: findAppliedPatchDirList(dirList)
     } else {
-      throw new IOUtils.InvalidPatchList(jPath)
+      throw new IOUtils.InvalidPatchList(path)
     }
 
-  def searchPatchedFile(patchablePath: String): JPath = {
+  def searchPatchedFile(patchablePathStr: String): Path = {
     val separator = FileSystems.getDefault().getSeparator()
-    val patchableJPath = Paths.get(patchablePath.replace("/", separator))
-    appliedPatchDirList.map(_.resolve(patchableJPath)).find(Files.exists(_))
-      .getOrElse { throw new IOUtils.FileIsNotFound(patchablePath) }
+    val patchablePath = Paths.get(patchablePathStr.replace("/", separator))
+    appliedPatchDirList.map(_.resolve(patchablePath)).find(Files.exists(_))
+      .getOrElse { throw new IOUtils.FileIsNotFound(patchablePathStr) }
   }
 
   def withPatchedReader[T](patchablePath: String)(op: Reader => T): T = {

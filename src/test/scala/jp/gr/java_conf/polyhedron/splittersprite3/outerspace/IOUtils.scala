@@ -1,7 +1,7 @@
 import java.nio.file.{Path, Paths, Files}
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
-import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
+import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
 import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
@@ -376,11 +376,11 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   }
 
   "IOUtils" should "パッチチェーン内で最新のファイルを選択" in {
-    for (parentDir <- pathTailMap.keys; patchableJPath <- pathTailMap.keys) {
-      var patchablePath = patchableJPath.getName(0).toString
-      for (i <- 1 until patchableJPath.getNameCount()) {
+    for (parentDir <- pathTailMap.keys; patchablePath <- pathTailMap.keys) {
+      var patchablePathStr = patchablePath.getName(0).toString
+      for (i <- 1 until patchablePath.getNameCount()) {
         // OSによらず、スラッシュ区切りの文字列
-        patchablePath += s"/${patchableJPath.getName(i).toString}"
+        patchablePathStr += s"/${patchablePath.getName(i).toString}"
       }
 
       Atmosphere.withTestIOUtils(
@@ -395,28 +395,28 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             "ver1.0.0"))
 
           intercept[outerspace.IOUtils.FileIsNotFound] {
-            Atmosphere.ioUtils.searchPatchedFile(patchablePath)
+            Atmosphere.ioUtils.searchPatchedFile(patchablePathStr)
           }
 
           val oldFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "ver1.0.0").resolve(patchableJPath)
+            "ver1.0.0").resolve(patchablePath)
           Files.createDirectories(oldFilePath.getParent())
           Files.createFile(oldFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
                  oldFilePath)
 
           val newerFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchableJPath)
+            "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchablePath)
           Files.createDirectories(newerFilePath.getParent())
           Files.createFile(newerFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
                  newerFilePath)
 
           val newestFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchableJPath)
+            "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchablePath)
           Files.createDirectories(newestFilePath.getParent())
           Files.createFile(newestFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePath) ===
+          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
                  newestFilePath)
         }
       }

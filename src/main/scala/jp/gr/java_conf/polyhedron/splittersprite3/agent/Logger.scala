@@ -1,7 +1,7 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import java.io.{PrintWriter, StringWriter}
-import java.nio.file.{Files, Paths, Path => JPath}
+import java.nio.file.{Files, Paths, Path}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 
@@ -14,7 +14,7 @@ object Logger extends LoanAgent {
   private var writer = new PrintWriter(new StringWriter, true)
   val maxLogFileCount = 10
 
-  private def buildWriter(logDirPath: JPath) = {
+  private def buildWriter(logDirPath: Path) = {
     val logPath = {
       val logFileName = Paths.get(
         Atmosphere.timeUtils.currentTimeMillisStr.replaceAll(
