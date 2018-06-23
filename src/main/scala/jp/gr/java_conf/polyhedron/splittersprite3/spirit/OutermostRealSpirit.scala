@@ -51,7 +51,8 @@ class OutermostRealSpirit private (
   def parentOpt: Option[OutermostRealSpirit] = {
     if (loadParent) {
       withoutParent {
-        rawOpt("parent", "parent").map(resolve).map(OutermostRealSpirit(_))
+        rawOpt("path", "special", "parent")
+          .map(resolve).map(OutermostRealSpirit(_))
       }
     } else {
       None
@@ -66,7 +67,7 @@ class OutermostRealSpirit private (
       }
     }
 
-    rawOpt("parent", "parent") =
+    rawOpt("path", "special", "parent") =
       newParentOpt.map(_.patchablePath).map(relativize)
   }
 
@@ -87,6 +88,11 @@ class OutermostRealSpirit private (
 
   def load() {
     xml = Atmosphere.ioUtils.withPatchedReader(patchablePath)(XML.load)
+
+    // scalaのxmlパーザはロード時にattributeを逆転させてしまうので
+    // 再ロードして元に戻す
+    // 参考：<https://github.com/scala/scala-xml/issues/65>
+    xml = XML.loadString(xml.toString)
   }
 
   def save() {

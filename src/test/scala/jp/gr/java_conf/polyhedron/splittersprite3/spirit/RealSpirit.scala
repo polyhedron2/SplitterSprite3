@@ -125,7 +125,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root/>))
         assert(spiritMap("tested.spirit").parentOpt ===
@@ -155,7 +155,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <parent field="parent">parent.spirit</parent>""",
+          """  <path typing="special" field="parent">parent.spirit</path>""",
           """</root>""").mkString("\n"))
       }
     }
@@ -186,9 +186,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
+            }</literal>
           </root>))
         assert(spiritMap("tested.spirit").spawnerClassOpt ===
                Some(classOf[RealSpiritSpec.StandardSpawner]))
@@ -206,7 +206,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <spawner field="spawner">invalid cls path</spawner>
+            <literal typing="special" field="spawner">invalid path</literal>
           </root>))
 
         intercept[SpawnerIsInvalid] {
@@ -221,10 +221,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.InfiniteLoopSpawner].getName()
-            }</spawner>
-            <outermost field="outermost field">tested.spirit</outermost>
+            }</literal>
+            <path typing="spirit" field="outermost field">tested.spirit</path>
           </root>))
 
         val e = intercept[InvocationTargetException] {
@@ -252,9 +252,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.InvalidConstructorSpawner].getName()
-            }</spawner>
+            }</literal>
           </root>))
 
         intercept[SpawnerNotHaveSpiritConstructor] {
@@ -269,12 +269,12 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
+            }</literal>
           </root>))
         assert(spiritMap("tested.spirit").spawnerClassOpt ===
                Some(classOf[RealSpiritSpec.StandardSpawner]))
@@ -297,9 +297,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardSpawner].getName() +
-          """</spawner>""",
+          """  <literal typing="special" field="spawner">""",
+          """    """ + classOf[RealSpiritSpec.StandardSpawner].getName(),
+          """  </literal>""",
           """</root>""").mkString("\n"))
       }
     }
@@ -310,10 +310,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         assert(spiritMap("tested.spirit").string("string field") === "foo")
@@ -329,13 +329,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         assert(spiritMap("tested.spirit").string("string field") === "foo")
@@ -366,10 +366,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <boolean field="boolean field">true</boolean>""",
-          """  <double field="double field">3.14</double>""",
-          """  <int field="int field">42</int>""",
-          """  <string field="string field">foo</string>""",
+          """  <literal typing="boolean" field="boolean field">true</literal>""",
+          """  <literal typing="double" field="double field">3.14</literal>""",
+          """  <literal typing="int" field="int field">42</literal>""",
+          """  <literal typing="string" field="string field">foo</literal>""",
           """</root>""").mkString("\n"))
       }
     }
@@ -380,11 +380,11 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="inner field">
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -406,14 +406,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <inner field="inner field">
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -457,11 +457,11 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="inner field">""",
-          """    <boolean field="boolean field">true</boolean>""",
-          """    <double field="double field">3.14</double>""",
-          """    <int field="int field">42</int>""",
-          """    <string field="string field">foo</string>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <literal typing="boolean" field="boolean field">true</literal>""",
+          """    <literal typing="double" field="double field">3.14</literal>""",
+          """    <literal typing="int" field="int field">42</literal>""",
+          """    <literal typing="string" field="string field">foo</literal>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
       }
@@ -490,10 +490,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         assert(spiritMap(
@@ -513,9 +513,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <boolean field="boolean field">yes</boolean>
-            <int field="int field">infinity</int>
-            <double field="double field">1 + 2i</double>
+            <literal typing="boolean" field="boolean field">yes</literal>
+            <literal typing="int" field="int field">infinity</literal>
+            <literal typing="double" field="double field">1 + 2i</literal>
           </root>))
 
         intercept[SpiritValueIsInvalid] {
@@ -557,18 +557,18 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "firstDir/tested.spirit" -> <root>
-            <outermost field="outermost field">{
+            <path typing="spirit" field="outermost field">{
               "../secondDir/referred.spirit"
-            }</outermost>
+            }</path>
           </root>,
           "secondDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            }</literal>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         val spawner = spiritMap("firstDir/tested.spirit")
@@ -587,13 +587,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val spiritMap = prepare(Map(
           "firstDir/tested.spirit" -> <root/>,
           "secondDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            }</literal>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         spiritMap(
@@ -613,9 +613,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <outermost field="outermost field">""" +
-          """../secondDir/referred.spirit""" +
-          """</outermost>""",
+          """  <path typing="spirit" field="outermost field">""",
+          """    ../secondDir/referred.spirit""",
+          """  </path>""",
           """</root>""").mkString("\n"))
        }
     }
@@ -626,20 +626,20 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "firstDir/tested.spirit" -> <root>
-            <inner field="inner field">
-              <outermost field="outermost field">{
+            <inner typing="spirit" field="inner field">
+              <path typing="spirit" field="outermost field">{
                 "../secondDir/referred.spirit"
-              }</outermost>
+              }</path>
             </inner>
           </root>,
           "secondDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            }</literal>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         val spawner = spiritMap("firstDir/tested.spirit")("inner field")
@@ -658,13 +658,13 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val spiritMap = prepare(Map(
           "firstDir/tested.spirit" -> <root/>,
           "secondDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            }</literal>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>))
 
         spiritMap("firstDir/tested.spirit")("inner field")
@@ -684,10 +684,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="inner field">""",
-          """    <outermost field="outermost field">""" +
-          """../secondDir/referred.spirit""" +
-          """</outermost>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <path typing="spirit" field="outermost field">""",
+          """      ../secondDir/referred.spirit""",
+          """    </path>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
        }
@@ -699,7 +699,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <outermost field="outermost field">dummy.spirit</outermost>
+            <path typing="spirit" field="outermost field">dummy.spirit</path>
           </root>))
 
         intercept[SpiritValueIsInvalid] {
@@ -726,14 +726,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="inner field">
-              <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <literal typing="special" field="spawner">{
                 classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-              }</spawner>
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+              }</literal>
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -754,17 +754,17 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <inner field="inner field">
-              <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <literal typing="special" field="spawner">{
                 classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-              }</spawner>
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+              }</literal>
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -787,14 +787,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           "tested.spirit" -> <root/>,
           "another.spirit" ->
           <root>
-            <inner field="inner field">
-              <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <literal typing="special" field="spawner">{
                 classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-              }</spawner>
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+              }</literal>
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -816,14 +816,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="inner field">""",
-          """    <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """    <string field="string field">foo</string>""",
-          """    <boolean field="boolean field">true</boolean>""",
-          """    <int field="int field">42</int>""",
-          """    <double field="double field">3.14</double>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <literal typing="special" field="spawner">""",
+          """      """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """    </literal>""",
+          """    <literal typing="string" field="string field">foo</literal>""",
+          """    <literal typing="boolean" field="boolean field">true</literal>""",
+          """    <literal typing="int" field="int field">42</literal>""",
+          """    <literal typing="double" field="double field">3.14</literal>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
       }
@@ -835,15 +835,15 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="inner field">
-              <inner field="inner field 2">
-                <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <inner typing="spirit" field="inner field 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
             </inner>
           </root>))
@@ -866,18 +866,18 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <inner field="inner field">
-              <inner field="inner field 2">
-                <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <inner typing="spirit" field="inner field 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
             </inner>
           </root>))
@@ -901,14 +901,14 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
           "tested.spirit" -> <root/>,
           "another.spirit" ->
           <root>
-            <inner field="inner field">
-              <spawner field="spawner">{
+            <inner typing="spirit" field="inner field">
+              <literal typing="special" field="spawner">{
                 classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-              }</spawner>
-              <string field="string field">foo</string>
-              <boolean field="boolean field">true</boolean>
-              <int field="int field">42</int>
-              <double field="double field">3.14</double>
+              }</literal>
+              <literal typing="string" field="string field">foo</literal>
+              <literal typing="boolean" field="boolean field">true</literal>
+              <literal typing="int" field="int field">42</literal>
+              <literal typing="double" field="double field">3.14</literal>
             </inner>
           </root>))
 
@@ -931,15 +931,15 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="inner field">""",
-          """    <inner field="inner field 2">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">foo</string>""",
-          """      <boolean field="boolean field">true</boolean>""",
-          """      <int field="int field">42</int>""",
-          """      <double field="double field">3.14</double>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <inner typing="spirit" field="inner field 2">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">foo</literal>""",
+          """      <literal typing="boolean" field="boolean field">true</literal>""",
+          """      <literal typing="int" field="int field">42</literal>""",
+          """      <literal typing="double" field="double field">3.14</literal>""",
           """    </inner>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
@@ -952,35 +952,35 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="kv field">
+            <inner typing="key-value" field="kv field">
               <!--- ("fuga", "hoge", "piyo") を ("hoge", "fuga", "piyo") に -->
-              <permutation field="permutation">hoge \\ fuga</permutation>
-              <inner field="hoge">
-                <spawner field="spawner">{
+              <literal typing="special" field="permutation">hoge \\ fuga</literal>
+              <inner typing="spirit" field="hoge">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
-              <inner field="fuga">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="fuga">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">bar</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">420</int>
-                <double field="double field">31.4</double>
+                }</literal>
+                <literal typing="string" field="string field">bar</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">420</literal>
+                <literal typing="double" field="double field">31.4</literal>
               </inner>
-              <inner field="piyo">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="piyo">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">baz</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">4200</int>
-                <double field="double field">314</double>
+                }</literal>
+                <literal typing="string" field="string field">baz</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">4200</literal>
+                <literal typing="double" field="double field">314</literal>
               </inner>
             </inner>
           </root>))
@@ -1006,55 +1006,55 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
     }
   }
 
-  "RealSpirit" should "親スピリット組み合わせてもkvSeqの読み込みが可能" in {
+  "RealSpirit" should "親スピリットと組み合わせてもkvSeqの読み込みが可能" in {
     Atmosphere.withTestIOUtils {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
-            <inner field="kv field">
+            <path typing="special" field="parent">parent.spirit</path>
+            <inner typing="key-value" field="kv field">
               <!--- ("fuga", "hoge", "piyo") を ("hoge", "fuga", "piyo") に -->
-              <permutation field="permutation">hoge \\ fuga</permutation>
-              <inner field="hoge">
-                <spawner field="spawner">{
+              <literal typing="special" field="permutation">hoge \\ fuga</literal>
+              <inner typing="spirit" field="hoge">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
-              <inner field="hogera" deleted="true"/>
+              <inner typing="spirit" field="hogera" deleted="true"/>
             </inner>
           </root>,
           "parent.spirit" -> <root>
-            <inner field="kv field">
-              <inner field="fuga">
-                <spawner field="spawner">{
+            <inner typing="key-value" field="kv field">
+              <inner typing="spirit" field="fuga">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">bar</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">420</int>
-                <double field="double field">31.4</double>
+                }</literal>
+                <literal typing="string" field="string field">bar</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">420</literal>
+                <literal typing="double" field="double field">31.4</literal>
               </inner>
-              <inner field="piyo">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="piyo">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">baz</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">4200</int>
-                <double field="double field">314</double>
+                }</literal>
+                <literal typing="string" field="string field">baz</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">4200</literal>
+                <literal typing="double" field="double field">314</literal>
               </inner>
-              <inner field="hogera">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="hogera">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">qux</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">42000</int>
-                <double field="double field">3140</double>
+                }</literal>
+                <literal typing="string" field="string field">qux</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">42000</literal>
+                <literal typing="double" field="double field">3140</literal>
               </inner>
             </inner>
           </root>))
@@ -1062,7 +1062,6 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val kvSeq = spiritMap("tested.spirit")
           .withString.andInnerSpawner[RealSpiritSpec.StandardInnerSpawner]
           .kvSeq("kv field")
-        assert(kvSeq.size === 3)
         kvSeq.map(_._1) should be (Seq("hoge", "fuga", "piyo"))
         assert(kvSeq(0)._2.string === "foo")
         assert(kvSeq(1)._2.string === "bar")
@@ -1086,33 +1085,33 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root/>,
           "another.spirit" -> <root>
-            <inner field="kv field 2">
-              <inner field="hoge 2">
-                <spawner field="spawner">{
+            <inner typing="key-value" field="kv field 2">
+              <inner typing="spirit" field="hoge 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
-              <inner field="fuga 2">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="fuga 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">bar</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">420</int>
-                <double field="double field">31.4</double>
+                }</literal>
+                <literal typing="string" field="string field">bar</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">420</literal>
+                <literal typing="double" field="double field">31.4</literal>
               </inner>
-              <inner field="piyo 2">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="piyo 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">baz</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">4200</int>
-                <double field="double field">314</double>
+                }</literal>
+                <literal typing="string" field="string field">baz</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">4200</literal>
+                <literal typing="double" field="double field">314</literal>
               </inner>
             </inner>
           </root>))
@@ -1153,35 +1152,35 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="kv field">""",
-          """    <permutation field="permutation">fuga \\ hoge \\ piyo""" +
-          """</permutation>""",
-          """    <inner field="fuga">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">bar</string>""",
-          """      <boolean field="boolean field">false</boolean>""",
-          """      <int field="int field">420</int>""",
-          """      <double field="double field">31.4</double>""",
+          """  <inner typing="key-value" field="kv field">""",
+          """    <literal typing="special" field="permutation">fuga \\ hoge \\ piyo""" +
+          """</literal>""",
+          """    <inner typing="spirit" field="fuga">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">bar</literal>""",
+          """      <literal typing="boolean" field="boolean field">false</literal>""",
+          """      <literal typing="int" field="int field">420</literal>""",
+          """      <literal typing="double" field="double field">31.4</literal>""",
           """    </inner>""",
-          """    <inner field="hoge">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">foo</string>""",
-          """      <boolean field="boolean field">true</boolean>""",
-          """      <int field="int field">42</int>""",
-          """      <double field="double field">3.14</double>""",
+          """    <inner typing="spirit" field="hoge">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">foo</literal>""",
+          """      <literal typing="boolean" field="boolean field">true</literal>""",
+          """      <literal typing="int" field="int field">42</literal>""",
+          """      <literal typing="double" field="double field">3.14</literal>""",
           """    </inner>""",
-          """    <inner field="piyo">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">baz</string>""",
-          """      <boolean field="boolean field">true</boolean>""",
-          """      <int field="int field">4200</int>""",
-          """      <double field="double field">314</double>""",
+          """    <inner typing="spirit" field="piyo">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">baz</literal>""",
+          """      <literal typing="boolean" field="boolean field">true</literal>""",
+          """      <literal typing="int" field="int field">4200</literal>""",
+          """      <literal typing="double" field="double field">314</literal>""",
           """    </inner>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
@@ -1194,49 +1193,49 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
+            <path typing="special" field="parent">parent.spirit</path>
           </root>,
           "parent.spirit" -> <root>
-            <inner field="kv field">
-              <inner field="hogera">
-                <spawner field="spawner">{
+            <inner typing="key-value" field="kv field">
+              <inner typing="spirit" field="hogera">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">qux</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42000</int>
-                <double field="double field">3140</double>
+                }</literal>
+                <literal typing="string" field="string field">qux</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42000</literal>
+                <literal typing="double" field="double field">3140</literal>
               </inner>
             </inner>
           </root>,
           "another.spirit" -> <root>
-            <inner field="kv field 2">
-              <inner field="hoge 2">
-                <spawner field="spawner">{
+            <inner typing="key-value" field="kv field 2">
+              <inner typing="spirit" field="hoge 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
-              <inner field="fuga 2">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="fuga 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">bar</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">420</int>
-                <double field="double field">31.4</double>
+                }</literal>
+                <literal typing="string" field="string field">bar</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">420</literal>
+                <literal typing="double" field="double field">31.4</literal>
               </inner>
-              <inner field="piyo 2">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="piyo 2">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">baz</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">4200</int>
-                <double field="double field">314</double>
+                }</literal>
+                <literal typing="string" field="string field">baz</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">4200</literal>
+                <literal typing="double" field="double field">314</literal>
               </inner>
             </inner>
           </root>))
@@ -1277,39 +1276,39 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="kv field">""",
-          """    <permutation field="permutation">fuga \\ hoge \\ piyo""" +
-          """</permutation>""",
-          """    <inner field="fuga">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">bar</string>""",
-          """      <boolean field="boolean field">false</boolean>""",
-          """      <int field="int field">420</int>""",
-          """      <double field="double field">31.4</double>""",
+          """  <inner typing="key-value" field="kv field">""",
+          """    <literal typing="special" field="permutation">fuga \\ hoge \\ piyo""" +
+          """</literal>""",
+          """    <inner typing="spirit" field="fuga">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">bar</literal>""",
+          """      <literal typing="boolean" field="boolean field">false</literal>""",
+          """      <literal typing="int" field="int field">420</literal>""",
+          """      <literal typing="double" field="double field">31.4</literal>""",
           """    </inner>""",
-          """    <inner field="hoge">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">foo</string>""",
-          """      <boolean field="boolean field">true</boolean>""",
-          """      <int field="int field">42</int>""",
-          """      <double field="double field">3.14</double>""",
+          """    <inner typing="spirit" field="hoge">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">foo</literal>""",
+          """      <literal typing="boolean" field="boolean field">true</literal>""",
+          """      <literal typing="int" field="int field">42</literal>""",
+          """      <literal typing="double" field="double field">3.14</literal>""",
           """    </inner>""",
-          """    <inner deleted="true" field="hogera"/>""",
-          """    <inner field="piyo">""",
-          """      <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardInnerSpawner].getName() +
-          """</spawner>""",
-          """      <string field="string field">baz</string>""",
-          """      <boolean field="boolean field">true</boolean>""",
-          """      <int field="int field">4200</int>""",
-          """      <double field="double field">314</double>""",
+          """    <inner typing="spirit" field="hogera" deleted="true"/>""",
+          """    <inner typing="spirit" field="piyo">""",
+          """      <literal typing="special" field="spawner">""",
+          """        """ + classOf[RealSpiritSpec.StandardInnerSpawner].getName(),
+          """      </literal>""",
+          """      <literal typing="string" field="string field">baz</literal>""",
+          """      <literal typing="boolean" field="boolean field">true</literal>""",
+          """      <literal typing="int" field="int field">4200</literal>""",
+          """      <literal typing="double" field="double field">314</literal>""",
           """    </inner>""",
           """  </inner>""",
-          """  <parent field="parent">parent.spirit</parent>""",
+          """  <path typing="special" field="parent">parent.spirit</path>""",
           """</root>""").mkString("\n"))
       }
     }
@@ -1320,35 +1319,35 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="kv field">
+            <inner typing="key-value" field="kv field">
               <!--- ("fuga", "hoge", "piyo") を ("hoge", "fuga", "piyo") に -->
-              <permutation field="permutation">hoge \\ fuga</permutation>
-              <inner field="hoge">
-                <spawner field="spawner">{
+              <literal typing="special" field="permutation">hoge \\ fuga</literal>
+              <inner typing="spirit" field="hoge">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">foo</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">42</int>
-                <double field="double field">3.14</double>
+                }</literal>
+                <literal typing="string" field="string field">foo</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">42</literal>
+                <literal typing="double" field="double field">3.14</literal>
               </inner>
-              <inner field="fuga">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="fuga">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">bar</string>
-                <boolean field="boolean field">false</boolean>
-                <int field="int field">420</int>
-                <double field="double field">31.4</double>
+                }</literal>
+                <literal typing="string" field="string field">bar</literal>
+                <literal typing="boolean" field="boolean field">false</literal>
+                <literal typing="int" field="int field">420</literal>
+                <literal typing="double" field="double field">31.4</literal>
               </inner>
-              <inner field="piyo">
-                <spawner field="spawner">{
+              <inner typing="spirit" field="piyo">
+                <literal typing="special" field="spawner">{
                   classOf[RealSpiritSpec.StandardInnerSpawner].getName()
-                }</spawner>
-                <string field="string field">baz</string>
-                <boolean field="boolean field">true</boolean>
-                <int field="int field">4200</int>
-                <double field="double field">314</double>
+                }</literal>
+                <literal typing="string" field="string field">baz</literal>
+                <literal typing="boolean" field="boolean field">true</literal>
+                <literal typing="int" field="int field">4200</literal>
+                <literal typing="double" field="double field">314</literal>
               </inner>
             </inner>
           </root>))
@@ -1379,40 +1378,40 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "firstDir/tested.spirit" -> <root>
-            <inner field="kv field">
+            <inner typing="key-value" field="kv field">
               <!--- ("fuga", "hoge", "piyo") を ("hoge", "fuga", "piyo") に -->
-              <permutation field="permutation">hoge \\ fuga</permutation>
-              <outermost field="hoge">../secondDir/referred.spirit</outermost>
-              <outermost field="fuga">../thirdDir/referred.spirit</outermost>
-              <outermost field="piyo">../fourthDir/referred.spirit</outermost>
+              <literal typing="special" field="permutation">hoge \\ fuga</literal>
+              <path typing="spirit" field="hoge">../secondDir/referred.spirit</path>
+              <path typing="spirit" field="fuga">../thirdDir/referred.spirit</path>
+              <path typing="spirit" field="piyo">../fourthDir/referred.spirit</path>
             </inner>
           </root>,
           "secondDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">foo</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">42</int>
-            <double field="double field">3.14</double>
+            }</literal>
+            <literal typing="string" field="string field">foo</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">42</literal>
+            <literal typing="double" field="double field">3.14</literal>
           </root>,
           "thirdDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">bar</string>
-            <boolean field="boolean field">true</boolean>
-            <int field="int field">420</int>
-            <double field="double field">31.4</double>
+            }</literal>
+            <literal typing="string" field="string field">bar</literal>
+            <literal typing="boolean" field="boolean field">true</literal>
+            <literal typing="int" field="int field">420</literal>
+            <literal typing="double" field="double field">31.4</literal>
           </root>,
           "fourthDir/referred.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="string field">baz</string>
-            <boolean field="boolean field">false</boolean>
-            <int field="int field">4200</int>
-            <double field="double field">314</double>
+            }</literal>
+            <literal typing="string" field="string field">baz</literal>
+            <literal typing="boolean" field="boolean field">false</literal>
+            <literal typing="int" field="int field">4200</literal>
+            <literal typing="double" field="double field">314</literal>
           </root>))
 
         val seq = spiritMap("firstDir/tested.spirit")
@@ -1439,10 +1438,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <inner field="kv field">
-              <string field="hoge">foo</string>
-              <string field="fuga">bar</string>
-              <string field="piyo">baz</string>
+            <inner typing="key-value" field="kv field">
+              <literal typing="string" field="hoge">foo</literal>
+              <literal typing="string" field="fuga">bar</literal>
+              <literal typing="string" field="piyo">baz</literal>
             </inner>
           </root>))
 
@@ -1457,23 +1456,23 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
-            <string field="child only">hoge</string>
-            <string field="child and parent">fuga</string>
-            <inner field="inner field">
-              <string field="child only">hoge</string>
-              <string field="child and parent">fuga</string>
+            <path typing="special" field="parent">parent.spirit</path>
+            <literal typing="string" field="child only">hoge</literal>
+            <literal typing="string" field="child and parent">fuga</literal>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="child only">hoge</literal>
+              <literal typing="string" field="child and parent">fuga</literal>
             </inner>
           </root>,
           "parent.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="parent only">foo</string>
-            <string field="child and parent">bar</string>
-            <inner field="inner field">
-              <string field="parent only">foo</string>
-              <string field="child and parent">bar</string>
+            }</literal>
+            <literal typing="string" field="parent only">foo</literal>
+            <literal typing="string" field="child and parent">bar</literal>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="parent only">foo</literal>
+              <literal typing="string" field="child and parent">bar</literal>
             </inner>
           </root>))
 
@@ -1483,18 +1482,18 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <inner field="inner field">""",
-          """    <string field="child and parent">fuga</string>""",
-          """    <string field="child only">hoge</string>""",
-          """    <string field="parent only">foo</string>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <literal typing="string" field="child and parent">fuga</literal>""",
+          """    <literal typing="string" field="child only">hoge</literal>""",
+          """    <literal typing="string" field="parent only">foo</literal>""",
           """  </inner>""",
-          """  <parent field="parent">parent.spirit</parent>""",
-          """  <spawner field="spawner">""" +
-          classOf[RealSpiritSpec.StandardSpawner].getName() +
-          """</spawner>""",
-          """  <string field="child and parent">fuga</string>""",
-          """  <string field="child only">hoge</string>""",
-          """  <string field="parent only">foo</string>""",
+          """  <literal typing="special" field="spawner">""",
+          """    """ + classOf[RealSpiritSpec.StandardSpawner].getName() ,
+          """  </literal>""",
+          """  <literal typing="string" field="child and parent">fuga</literal>""",
+          """  <literal typing="string" field="child only">hoge</literal>""",
+          """  <literal typing="string" field="parent only">foo</literal>""",
+          """  <path typing="special" field="parent">parent.spirit</path>""",
           """</root>""").mkString("\n"))
 
         val formattedInner = new PrettyPrinter(80, 2).format(
@@ -1502,10 +1501,10 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
         assert(
           formattedInner === List(
-          """<inner field="inner field">""",
-          """  <string field="child and parent">fuga</string>""",
-          """  <string field="child only">hoge</string>""",
-          """  <string field="parent only">foo</string>""",
+          """<inner typing="spirit" field="inner field">""",
+          """  <literal typing="string" field="child and parent">fuga</literal>""",
+          """  <literal typing="string" field="child only">hoge</literal>""",
+          """  <literal typing="string" field="parent only">foo</literal>""",
           """</inner>""").mkString("\n"))
       }
     }
@@ -1516,23 +1515,23 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         val spiritMap = prepare(Map(
           "tested.spirit" -> <root>
-            <parent field="parent">parent.spirit</parent>
-            <string field="child only">hoge</string>
-            <string field="child and parent">fuga</string>
-            <inner field="inner field">
-              <string field="child only">hoge</string>
-              <string field="child and parent">fuga</string>
+            <path typing="special" field="parent">parent.spirit</path>
+            <literal typing="string" field="child only">hoge</literal>
+            <literal typing="string" field="child and parent">fuga</literal>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="child only">hoge</literal>
+              <literal typing="string" field="child and parent">fuga</literal>
             </inner>
           </root>,
           "parent.spirit" -> <root>
-            <spawner field="spawner">{
+            <literal typing="special" field="spawner">{
               classOf[RealSpiritSpec.StandardSpawner].getName()
-            }</spawner>
-            <string field="parent only">foo</string>
-            <string field="child and parent">bar</string>
-            <inner field="inner field">
-              <string field="parent only">foo</string>
-              <string field="child and parent">bar</string>
+            }</literal>
+            <literal typing="string" field="parent only">foo</literal>
+            <literal typing="string" field="child and parent">bar</literal>
+            <inner typing="spirit" field="inner field">
+              <literal typing="string" field="parent only">foo</literal>
+              <literal typing="string" field="child and parent">bar</literal>
             </inner>
           </root>))
 
@@ -1544,12 +1543,12 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         assert(
           formatted === List(
           """<root>""",
-          """  <parent field="parent">parent.spirit</parent>""",
-          """  <string field="child only">hoge</string>""",
-          """  <string field="child and parent">fuga</string>""",
-          """  <inner field="inner field">""",
-          """    <string field="child only">hoge</string>""",
-          """    <string field="child and parent">fuga</string>""",
+          """  <path typing="special" field="parent">parent.spirit</path>""",
+          """  <literal typing="string" field="child only">hoge</literal>""",
+          """  <literal typing="string" field="child and parent">fuga</literal>""",
+          """  <inner typing="spirit" field="inner field">""",
+          """    <literal typing="string" field="child only">hoge</literal>""",
+          """    <literal typing="string" field="child and parent">fuga</literal>""",
           """  </inner>""",
           """</root>""").mkString("\n"))
 
@@ -1560,9 +1559,9 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
 
         assert(
           formattedInner === List(
-          """<inner field="inner field">""",
-          """  <string field="child only">hoge</string>""",
-          """  <string field="child and parent">fuga</string>""",
+          """<inner typing="spirit" field="inner field">""",
+          """  <literal typing="string" field="child only">hoge</literal>""",
+          """  <literal typing="string" field="child and parent">fuga</literal>""",
           """</inner>""").mkString("\n"))
       }
     }

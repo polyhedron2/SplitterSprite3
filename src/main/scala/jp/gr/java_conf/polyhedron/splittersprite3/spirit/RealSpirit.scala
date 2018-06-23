@@ -3,7 +3,7 @@ package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 import java.nio.file.{Paths}
 import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
-import scala.xml.{Elem, XML}
+import scala.xml.{Elem, XML, Node}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
@@ -40,42 +40,58 @@ abstract class RealSpirit extends Spirit {
   def parentOpt: Option[RealSpirit]
   def withoutParent[T](op: => T): T
 
+  private def sortXMLNodes(nodes: Seq[Node]) =
+    nodes.sortBy(node => (node \ "@field").text)
+         .sortBy(node => (node \ "@typing").text).sortBy(_.label)
+
   protected def updatedXML(
-      targetXML: Elem, element: String, field: String,
+      targetXML: Elem, element: String, typing: String, field: String,
       partialXMLOpt: Option[Elem]): Elem = {
     val child = targetXML.child.filter(
-      // 指定のelement, fieldのXML部分の古いものは削除
-      node => node.label != element || (node \ "@field").text != field) ++
+      // 指定のelement, typing, fieldのXML部分の古いものは削除
+      node => node.label != element ||
+      (node \ "@typing").text != typing ||
+      (node \ "@field").text != field) ++
       // 新しい要素を追加。Noneであれば何もしない
       partialXMLOpt
     // child以外は変更なし
     new Elem(
       targetXML.prefix, targetXML.label, targetXML.attributes, targetXML.scope,
       targetXML.minimizeEmpty,
-      child.sortBy(node => (node \ "@field").text).sortBy(_.label):_*)
+      sortXMLNodes(child):_*)
+  }
+
+  // scalaのxmlパーザはロード時にattributeを逆転させてしまうので
+  // 再ロードして元に戻す
+  // 参考：<https://github.com/scala/scala-xml/issues/65>
+  protected def loadXMLFromString(xmlText: String): Elem = {
+    val middleXML = XML.loadString(xmlText)
+    XML.loadString(middleXML.toString)
   }
 
   // 親スピリットのXMLと合わせたXML
   def compositeXML: Elem = parentOpt.map { case parent =>
-    val elementAndFields = xml.child.map(
-      node => (node.label, (node \ "@field").text)).toSet
+    val accessInfos = xml.child.map { case node =>
+      (node.label, (node \ "@typing").text, (node \ "@field").text)
+    }.toSet
 
     val innerChild =
-      (fieldSet("inner") ++ parent.fieldSet("inner")).toSeq.map { case field =>
-        innerSpiritMap(field).compositeXML
+      (typingFieldSet("inner") ++ parent.typingFieldSet("inner")).toSeq.map {
+        case (typing, field) => innerSpiritMap(typing, field).compositeXML
       }
 
     val nonInnerChild =
       parent.compositeXML.child.filter(node =>
         node.label != "inner" &&
-        !elementAndFields((node.label, (node \ "@field").text))) ++
+        !accessInfos(
+          (node.label, (node \ "@typing").text, (node \ "@field").text))) ++
       xml.child.filter(node => node.label != "inner")
 
     val child = nonInnerChild ++ innerChild
 
     new Elem(
       xml.prefix, xml.label, xml.attributes, xml.scope, xml.minimizeEmpty,
-      child.sortBy(node => (node \ "@field").text).sortBy(_.label):_*)
+      sortXMLNodes(child):_*)
   }.getOrElse {
     xml
   }
@@ -85,35 +101,48 @@ abstract class RealSpirit extends Spirit {
   protected def rawOpt = new RawOptAccessor()
 
   class RawOptAccessor() {
-    def apply(element: String, field: String): Option[String] =
+    def apply(element: String, typing: String, field: String): Option[String] =
       lock.synchronized {
-        (xml \ element).find(_.\("@field").text == field).map(_.text).orElse {
-          parentOpt.flatMap(_.rawOpt(element, field))
-        }
+        (xml \ element)
+          .filter(_.\("@typing").text == typing)
+          .find(_.\("@field").text == field)
+          .map(_.text)
+          .orElse(parentOpt.flatMap(_.rawOpt(element, typing, field)))
       }
 
-    def update(element: String, field: String, newRawOpt: Option[String]) {
+    def update(element: String, typing: String, field: String,
+               newRawOpt: Option[String]) {
       lock.synchronized {
-        xml = updatedXML(xml, element, field, newRawOpt.map { case raw =>
-          "<" + element + " field=\"" + field + "\">" + raw +
-          "</" + element + ">"
-        }.map(XML.loadString))
+        xml = updatedXML(
+          xml, element, typing, field,
+          newRawOpt.map { case raw =>
+            "<" + element +
+            " typing=\"" + typing + "\"" +
+            " field=\"" + field + "\"" +
+            ">" + raw + "</" + element + ">"
+          }.map(loadXMLFromString))
       }
     }
   }
 
-  // 指定elementのfield一覧
-  protected def fieldSet(element: String): Set[String] =
-    (xml \ element).map(_.\("@field").text).toSet ++
-    parentOpt.map(_.fieldSet(element)).getOrElse(Set()) --
-    (xml \ element).filter(
-      _.\("@deleted").text == "true").map(_.\("@field").text)
+  // 指定elementとtypingのfield一覧
+  protected def fieldSet(element: String, typing: String): Set[String] =
+    typingFieldSet(element).filter(_._1 == typing).map(_._2)
+
+  // 指定elementのtypingとfield一覧
+  protected def typingFieldSet(element: String): Set[(String, String)] =
+    (xml \ element)
+      .map(node => ((node \ "@typing").text, (node \ "@field").text)).toSet ++
+    parentOpt.map(_.typingFieldSet(element)).getOrElse(Set()) --
+    (xml \ element)
+      .filter(_.\("@deleted").text == "true")
+      .map(node => ((node \ "@typing").text, (node \ "@field").text)).toSet
 
   // spawner取得処理の無限ループ検出用
   private var isProcessingSpawner = false
 
   def spawnerClassOpt: Option[Class[_ <: Spawner[Any]]] =
-    rawOpt("spawner", "spawner").map { case raw =>
+    rawOpt("literal", "special", "spawner").map { case raw =>
       try {
         Class.forName(raw).asInstanceOf[Class[Spawner[Any]]]
       } catch {
@@ -123,7 +152,8 @@ abstract class RealSpirit extends Spirit {
     }
 
   def spawnerClassOpt_=(newSpawnerClassOpt: Option[Class[_ <: Spawner[Any]]]) {
-    rawOpt("spawner", "spawner") = newSpawnerClassOpt.map(_.getName())
+    rawOpt("literal", "special", "spawner") =
+      newSpawnerClassOpt.map(_.getName())
   }
 
   // このSpiritからSpawnするSpawner
@@ -150,32 +180,32 @@ abstract class RealSpirit extends Spirit {
   }
 
   val string = new RealLiteralAccessor[String] {
-    val element = "string"
+    val typing = "string"
     def raw2Literal(raw: String) = raw
     def literal2Raw(value: String) = value
   }
 
   val boolean = new RealLiteralAccessor[Boolean] {
-    val element = "boolean"
+    val typing = "boolean"
     def raw2Literal(raw: String) = raw.toBoolean
     def literal2Raw(value: Boolean) = value.toString
   }
 
   val int = new RealLiteralAccessor[Int] {
-    val element = "int"
+    val typing = "int"
     def raw2Literal(raw: String) = raw.toInt
     def literal2Raw(value: Int) = value.toString
   }
 
   val double = new RealLiteralAccessor[Double] {
-    val element = "double"
+    val typing = "double"
     def raw2Literal(raw: String) = raw.toDouble
     def literal2Raw(value: Double) = value.toString
   }
 
   abstract class RealLiteralAccessor[LITERAL]
       extends LiteralAccessor[LITERAL] {
-    def element: String
+    def typing: String
 
     // XML上の文字列から指定のリテラルに変換
     def raw2Literal(raw: String): LITERAL
@@ -184,7 +214,7 @@ abstract class RealSpirit extends Spirit {
 
     def apply(field: String): LITERAL = {
       try {
-        rawOpt(element, field).map(raw2Literal)
+        rawOpt("literal", typing, field).map(raw2Literal)
       } catch {
         // 文字列をリテラルに変換できなかった場合
         case e: Exception =>
@@ -203,7 +233,7 @@ abstract class RealSpirit extends Spirit {
     }
 
     def update(field: String, value: LITERAL) {
-      rawOpt(element, field) = Some(literal2Raw(value))
+      rawOpt("literal", typing, field) = Some(literal2Raw(value))
     }
   }
 
@@ -216,18 +246,18 @@ abstract class RealSpirit extends Spirit {
       Paths.get(otherPatchablePath)).normalize.toString
 
   val image = new RealFileAccessor[Image] {
-    val element = "image"
+    val typing = "image"
     def path2Value(patchablePath: String) =
       new Image(Atmosphere.ioUtils.inputStream(patchablePath))
   }
 
   abstract class RealFileAccessor[FILE_TYPE] extends FileAccessor[FILE_TYPE] {
-    val element: String
+    val typing: String
     def path2Value(patchablePath: String): FILE_TYPE
 
     def apply(field: String): FILE_TYPE = {
       try {
-        rawOpt(element, field).map(resolve).map(path2Value)
+        rawOpt("path", typing, field).map(resolve).map(path2Value)
       } catch {
         // 文字列をSpawnerに変換できなかった場合
         case e: Exception =>
@@ -245,7 +275,7 @@ abstract class RealSpirit extends Spirit {
   val outermostSpawner = new OutermostSpawnerAccessor {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T = {
       try {
-        rawOpt("outermost", field).map(resolve).map(
+        rawOpt("path", "spirit", field).map(resolve).map(
           OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
       } catch {
         // 文字列をSpawnerに変換できなかった場合
@@ -258,26 +288,27 @@ abstract class RealSpirit extends Spirit {
     }
 
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
-      rawOpt("outermost", field) = Some(spawner2RelativePath(value))
+      rawOpt("path", "spirit", field) = Some(spawner2RelativePath(value))
     }
   }
 
   val innerSpawner = new InnerSpawnerAccessor {
     def apply[T <: InnerSpawner[Any]: ClassTag](field: String): T =
-      innerSpiritMap(field).spawner.asInstanceOf[T]
+      innerSpiritMap("spirit", field).spawner.asInstanceOf[T]
 
     def update[T <: InnerSpawner[Any]: ClassTag](field: String, value: T) {
       // compositeXMLは元のvalueのフィールド名を持っているので差し替える
-      val newInnerXML = XML.loadString(
-        "<inner field=\"" + field + "\">" +
-        value.spirit.compositeXML.child.mkString +
-        "</inner>")
-      xml = updatedXML(xml, "inner", field, Some(newInnerXML))
+      val newInnerXML = loadXMLFromString(
+        "<inner" +
+        " typing=\"spirit\"" +
+        " field=\"" + field + "\"" +
+        ">" + value.spirit.compositeXML.child.mkString + "</inner>")
+      xml = updatedXML(xml, "inner", "spirit", field, Some(newInnerXML))
     }
   }
 
-  val withString: RealTypeDefiner1[String] =
-    new RealTypeDefiner1[String](x => x, x => x, "string", (a, b) => a < b)
+  val withString: RealTypeDefiner1[String] = new RealTypeDefiner1[String](
+    x => x, x => x, "literal", "string", (a, b) => a < b)
 
   val withOutermostSpawner = new OutermostTypeDefinerCache {
     private var cache =
@@ -289,14 +320,15 @@ abstract class RealSpirit extends Spirit {
         relativePath => OutermostRealSpirit(
           resolve(relativePath)).spawner.asInstanceOf[T1],
         spawner2RelativePath,
-        "outermost", (a, b) => a.spirit.patchablePath < b.spirit.patchablePath)
+        "path", "spirit",
+        (a, b) => a.spirit.patchablePath < b.spirit.patchablePath)
       }
       cache(spawnerCls).asInstanceOf[RealTypeDefiner1[T1]]
     }
   }
 
   def permutation[T](raw2Key: String => T): common.Permutation[T] =
-    rawOpt("permutation", "permutation").map(
+    rawOpt("literal", "special", "permutation").map(
         common.Permutation.fromString(_, raw2Key)).getOrElse {
       // 設定がなければ恒等置換
       new common.Permutation(Map())
@@ -304,9 +336,9 @@ abstract class RealSpirit extends Spirit {
 
   class RealTypeDefiner1[T1](
         raw2Key: String => T1, key2Raw: T1 => String,
-        element: String, ordering: (T1, T1) => Boolean)
+        element: String, typing: String, ordering: (T1, T1) => Boolean)
       extends RealTypeDefiner2SimpleValue[String, T1](
-        x => x, raw2Key, x => x, key2Raw, element, (a, b) => a < b)
+        x => x, raw2Key, x => x, key2Raw, element, typing, (a, b) => a < b)
       with TypeDefiner1[T1] {
     val andInnerSpawner = new InnerTypeDefinerCache {
       private var cache = Map[
@@ -327,11 +359,11 @@ abstract class RealSpirit extends Spirit {
   class RealTypeDefiner2SimpleValue[T1, T2](
         raw2Key: String => T1, raw2Value: String => T2,
         key2Raw: T1 => String, value2Raw: T2 => String,
-        element: String, ordering: (T1, T1) => Boolean)
+        element: String, typing: String, ordering: (T1, T1) => Boolean)
       extends TypeDefiner2[T1, T2] {
     val kvSeq: RealKVAccessorSimpleValue[T1, T2] =
       new RealKVAccessorSimpleValue[T1, T2](
-        raw2Key, raw2Value, key2Raw, value2Raw, element, ordering)
+        raw2Key, raw2Value, key2Raw, value2Raw, element, typing, ordering)
   }
 
   class RealTypeDefiner2SpiritValue[T1, T2](
@@ -347,10 +379,11 @@ abstract class RealSpirit extends Spirit {
   class RealKVAccessorSimpleValue[T1, T2](
         val raw2Key: String => T1, raw2Value: String => T2,
         val key2Raw: T1 => String, val value2Raw: T2 => String,
-        val element: String, val ordering: (T1, T1) => Boolean)
+        val element: String, val typing: String,
+        val ordering: (T1, T1) => Boolean)
       extends RealKVAccessor[T1, T2] {
     def valueOpt(kvSpirit: RealSpirit, entryField: String) =
-      kvSpirit.rawOpt(element, entryField).map(raw2Value)
+      kvSpirit.rawOpt(element, typing, entryField).map(raw2Value)
   }
 
   class RealKVAccessorSpiritValue[T1, T2](
@@ -359,6 +392,7 @@ abstract class RealSpirit extends Spirit {
         val ordering: (T1, T1) => Boolean)
       extends RealKVAccessor[T1, T2] {
     val element = "inner"
+    val typing = "spirit"
     val value2Raw =
       (value: T2) => value2Spirit(value).compositeXML.child.mkString
 
@@ -368,6 +402,7 @@ abstract class RealSpirit extends Spirit {
 
   trait RealKVAccessor[T1, T2] extends KVAccessor[T1, T2] {
     val element: String
+    val typing: String
     val raw2Key: String => T1
     val key2Raw: T1 => String
     val value2Raw: T2 => String
@@ -376,8 +411,8 @@ abstract class RealSpirit extends Spirit {
     def valueOpt(kvSpirit: RealSpirit, entryField: String): Option[T2]
 
     def apply(field: String): Seq[(T1, T2)] = lock.synchronized {
-      val kvSpirit = innerSpiritMap(field)
-      val entryFieldSet = kvSpirit.fieldSet(element)
+      val kvSpirit = innerSpiritMap("key-value", field)
+      val entryFieldSet = kvSpirit.fieldSet(element, typing)
       val perm = kvSpirit.permutation(raw2Key)
 
       entryFieldSet.flatMap { case entryField =>
@@ -388,10 +423,11 @@ abstract class RealSpirit extends Spirit {
 
     def update(field: String, value: Seq[(T1, T2)]) {
       lock.synchronized {
-        val kvSpirit = innerSpiritMap(field)
+        val kvSpirit = innerSpiritMap("key-value", field)
 
         val deletedFields =
-          kvSpirit.parentOpt.map(_.fieldSet(element)).getOrElse(Set()) --
+          kvSpirit.parentOpt.map(
+            _.fieldSet(element, typing)).getOrElse(Set()) --
           value.map(_._1).map(key2Raw)
 
         val entries =
@@ -403,24 +439,45 @@ abstract class RealSpirit extends Spirit {
         val permText = common.Permutation.toString(
           common.Permutation.extract(value.map(_._1), ordering), key2Raw)
 
-        xml = updatedXML(xml, "inner", field, Some(XML.loadString(
-          "<inner field=\"" + field + "\">" +
-          "<permutation field=\"permutation\">" + permText + "</permutation>" +
-          entries.sortBy(_._1).map {
-            case (entryKey, Some(entryValue)) =>
-              "<" + element + " field=\"" + entryKey + "\">" + entryValue +
-              "</" + element + ">"
-            case (entryKey, None) =>
-              "<" + element + " field=\"" + entryKey + "\" deleted=\"true\"/>"
-          }.mkString +
-          "</inner>")))
+        xml = updatedXML(
+          xml, "inner", "key-value", field, Some(loadXMLFromString(
+            "<inner" +
+            " typing=\"key-value\"" +
+            " field=\"" + field + "\"" +
+            ">" +
+            "<literal" +
+            " typing=\"special\"" +
+            " field=\"permutation\"" +
+            ">" + permText +
+            "</literal>" +
+            entries.sortBy(_._1).map {
+              case (entryKey, Some(entryValue)) =>
+                "<" + element +
+                " typing=\"" + typing + "\"" +
+                " field=\"" + entryKey + "\"" +
+                ">" +
+                entryValue +
+                "</" + element + ">"
+              case (entryKey, None) =>
+                "<" + element +
+                " typing=\"" + typing + "\"" +
+                " field=\"" + entryKey + "\"" +
+                " deleted=\"true\"" +
+                "/>"
+            }.mkString +
+            "</inner>")))
       }
     }
   }
 
   // InnerSpirit一覧管理用
-  protected val innerSpiritMap = new common.Cache[String, InnerRealSpirit] {
-    def calc(field: String) = new InnerRealSpirit(RealSpirit.this, field)
+  val innerSpiritMap =
+      new common.Cache[(String, String), InnerRealSpirit] {
+    def calc(typingField: (String, String)) =
+      new InnerRealSpirit(RealSpirit.this, typingField._1, typingField._2)
   }
-  def apply(field: String): InnerRealSpirit = innerSpiritMap(field)
+
+  def apply(field: String): InnerRealSpirit = innerSpiritMap("spirit", field)
+
+  override def toString() = s"Spirit(${patchablePath})"
 }

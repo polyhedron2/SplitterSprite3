@@ -5,7 +5,7 @@ import scala.xml.{Elem, XML}
 // 他XMLの内部XMLを読み書きするRealSpirit
 // outer: １つ外側のRealSpirit
 // fieldToThis: outerから見たこのInnerRealSpiritの属するfield
-class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
+class InnerRealSpirit(outer: RealSpirit, typing: String, fieldToThis: String)
     extends RealSpirit {
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
@@ -13,21 +13,29 @@ class InnerRealSpirit(outer: RealSpirit, fieldToThis: String)
   val patchablePath = s"${outer.patchablePath}[${fieldToThis}]"
 
   def xml: Elem = lock.synchronized {
-    (outer.xml \ "inner").toSeq.map(_.asInstanceOf[Elem]).find(
-        _.\("@field").text == fieldToThis).getOrElse {
+    (outer.xml \ "inner")
+          .filter(_.\("@typing").text == typing)
+          .find(_.\("@field").text == fieldToThis)
+          .map(_.asInstanceOf[Elem])
+          .getOrElse {
       // 親がこのInnerRealSpirit用のXMLを持たない場合は空のXMLを読む
-      XML.loadString("<inner field=\"" + fieldToThis + "\"></inner>")
+      XML.loadString(
+        "<inner" +
+        " field=\"" + fieldToThis + "\"" +
+        " typing=\"" + typing + "\"" +
+        "/>")
     }
   }
 
   def xml_=(newXML: Elem) {
     lock.synchronized {
-      outer.xml = updatedXML(outer.xml, "inner", fieldToThis, Some(newXML))
+      outer.xml =
+        updatedXML(outer.xml, "inner", typing, fieldToThis, Some(newXML))
     }
   }
 
   def parentOpt: Option[InnerRealSpirit] =
-    outer.parentOpt.map(_.apply(fieldToThis))
+    outer.parentOpt.map(_.innerSpiritMap(typing, fieldToThis))
 
   def withoutParent[T](op: => T) = outer.withoutParent(op)
 
