@@ -4,6 +4,7 @@ import scala.xml.{Elem, XML, PrettyPrinter}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
+import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 class ChickenOrEggException(spirit: OutermostRealSpirit) extends Exception({
   val loopInfo = spirit.ancestors.map(_.patchablePath).mkString(" -> ")
@@ -18,7 +19,13 @@ object OutermostRealSpirit {
   def apply(patchablePath: String,
             requireFile: Boolean = true): OutermostRealSpirit = {
     val ret = body(patchablePath)
-    if (requireFile) { ret.load() }
+    try {
+      ret.load()
+    } catch {
+      // ロードがファイル無しで失敗することを許容するかはrequireFileで分岐
+      case e: outerspace.IOUtils.FileIsNotFound =>
+        if (requireFile) { throw e }
+    }
     ret
   }
 
