@@ -1,7 +1,7 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.agent
 
 import java.io.{PrintWriter, StringWriter}
-import java.nio.file.{Files, Paths, Path}
+import java.nio.file.{Files => NioFiles, Paths => NioPaths, Path => NioPath}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 
@@ -14,15 +14,15 @@ object Logger extends LoanAgent {
   private var writer = new PrintWriter(new StringWriter, true)
   val maxLogFileCount = 10
 
-  private def buildWriter(logDirPath: Path) = {
+  private def buildWriter(logDirPath: NioPath) = {
     val logPath = {
-      val logFileName = Paths.get(
+      val logFileName = NioPaths.get(
         Atmosphere.timeUtils.currentTimeMillisStr.replaceAll(
           " ", "_").replaceAll(":", "_") +
         ".log")
       logDirPath.resolve(logFileName)
     }
-    new PrintWriter(Files.newBufferedWriter(logPath), true)
+    new PrintWriter(NioFiles.newBufferedWriter(logPath), true)
   }
 
   private def println(message: String) = synchronized {
@@ -62,13 +62,13 @@ object Logger extends LoanAgent {
 
   override def enter() {
     val logDirPath =
-      Atmosphere.ioUtils.gameDirPath.resolve(Paths.get("log"))
-    Files.createDirectories(logDirPath)
+      Atmosphere.ioUtils.gameDirPath.resolve(NioPaths.get("log"))
+    NioFiles.createDirectories(logDirPath)
 
     // logファイル数がmaxLogFileCountを超えないように古いファイルを消す
     Atmosphere.ioUtils.childrenList(logDirPath).sortBy(_.toString).reverse
       .zipWithIndex.filter(_._2 >= maxLogFileCount - 1).map(_._1)
-      .foreach(Files.delete)
+      .foreach(NioFiles.delete)
 
     writer = buildWriter(logDirPath)
     infoLog("================== SYSTEM PROPERTY ==================")

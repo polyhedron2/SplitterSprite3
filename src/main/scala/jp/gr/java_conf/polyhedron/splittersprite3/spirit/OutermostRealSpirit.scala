@@ -6,28 +6,32 @@ import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
-class ChickenOrEggException(spirit: OutermostRealSpirit) extends Exception({
-  val loopInfo = spirit.ancestors.map(_.patchablePath).mkString(" -> ")
-  s"スピリットの親子関係がループを起こしています。(${loopInfo})"
+class ChickenOrEggException(
+      spirit: OutermostRealSpirit, newParent: OutermostRealSpirit)
+    extends Exception({
+  val loopInfo = newParent.ancestors.map(_.patchablePath).mkString(" -> ")
+  s"新規の親の親子関係(${loopInfo})は${spirit}とループを起こします。"
 })
 
 object OutermostRealSpirit {
-  private val body = new common.Cache[String, OutermostRealSpirit] {
-    def calc(patchablePath: String) = new OutermostRealSpirit(patchablePath)
-  }
+  private val body =
+    new common.Cache[common.PatchablePath, OutermostRealSpirit] {
+      def calc(path: common.PatchablePath) = new OutermostRealSpirit(path)
+    }
 
-  def apply(patchablePath: String,
-            requireFile: Boolean = true): OutermostRealSpirit = {
-    val ret = body(patchablePath)
+  def apply(path: common.PatchablePath): OutermostRealSpirit = {
+    val ret = body(path)
     try {
       ret.load()
     } catch {
-      // ロードがファイル無しで失敗することを許容するかはrequireFileで分岐
-      case e: outerspace.IOUtils.FileIsNotFound =>
-        if (requireFile) { throw e }
+      // ロードがファイル無しで失敗することを許容する
+      case e: common.Path.FileIsNotFound =>
     }
     ret
   }
+
+  def apply(pathStr: String): OutermostRealSpirit =
+    apply(new common.PatchablePath(pathStr))
 
   def clear() { body.clear() }
 }
@@ -36,7 +40,7 @@ object OutermostRealSpirit {
 // １XMLに対してOutermostRealSpiritは１インスタンス
 // patchablePath: 内部パス、ファイル区切り文字は'/'で統一
 class OutermostRealSpirit private (
-    val patchablePath: String) extends RealSpirit {
+    val patchablePath: common.PatchablePath) extends RealSpirit {
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = this
@@ -58,8 +62,7 @@ class OutermostRealSpirit private (
   def parentOpt: Option[OutermostRealSpirit] = {
     if (loadParent) {
       withoutParent {
-        rawOpt("path", "special", "parent")
-          .map(resolve).map(OutermostRealSpirit(_))
+        pathOpt("special", "parent").map(OutermostRealSpirit(_))
       }
     } else {
       None
@@ -70,12 +73,11 @@ class OutermostRealSpirit private (
     newParentOpt.foreach { case newParent =>
       val ancestorPaths = newParent.ancestors.map(_.patchablePath).toSet
       if (ancestorPaths(patchablePath)) {
-        throw new ChickenOrEggException(this)
+        throw new ChickenOrEggException(this, newParent)
       }
     }
 
-    rawOpt("path", "special", "parent") =
-      newParentOpt.map(_.patchablePath).map(relativize)
+    pathOpt("special", "parent") = newParentOpt.map(_.patchablePath)
   }
 
   // 自分を含めた祖先一覧
@@ -94,7 +96,7 @@ class OutermostRealSpirit private (
   }
 
   def load() {
-    xml = Atmosphere.ioUtils.withPatchedReader(patchablePath)(XML.load)
+    xml = patchablePath.withReader(XML.load)
 
     // scalaのxmlパーザはロード時にattributeを逆転させてしまうので
     // 再ロードして元に戻す
@@ -104,6 +106,8 @@ class OutermostRealSpirit private (
 
   def save() {
     val formatted = new PrettyPrinter(80, 2).format(xml)
-    Atmosphere.ioUtils.withPatchedWriter(patchablePath)(_.write(formatted))
+    patchablePath.withWriter(_.write(formatted))
   }
+
+  override def toString = s"${patchablePath}"
 }

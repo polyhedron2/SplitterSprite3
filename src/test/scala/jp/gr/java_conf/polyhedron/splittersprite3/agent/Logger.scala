@@ -1,5 +1,5 @@
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
-import java.nio.file.{Files}
+import java.nio.file.{Files => NioFiles}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.Atmosphere
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
@@ -111,10 +111,10 @@ class LoggerSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       Atmosphere.withTestTimeUtils(List(0), "UTC") {
         val logDir = Atmosphere.ioUtils.gameDirPath.resolve("log")
 
-        Files.createDirectories(logDir)
+        NioFiles.createDirectories(logDir)
         for (i <- 0 until 11) {
           val logFile = logDir.resolve(f"dummy_${i}%03d.log")
-          Files.createFile(logFile)
+          NioFiles.createFile(logFile)
         }
 
         Atmosphere.ioUtils.childrenList(logDir).map(

@@ -4,6 +4,7 @@ import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 import scala.xml.{Elem}
 
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   OutermostSpawner, InnerSpawner, Spawner,
 }
@@ -11,10 +12,10 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
 // XMLファイルへの読み書きを定める抽象クラス
 abstract class Spirit {
   // ゲームフォルダ内の相対ファイルパス。区切り文字は'/'で統一。
-  val patchablePath: String
+  val patchablePath: common.PatchablePath
 
   // XMLファイル名
-  def name: String = patchablePath.split('/').last
+  def name: String = patchablePath.name
 
   def spawner: Spawner[Any]
 

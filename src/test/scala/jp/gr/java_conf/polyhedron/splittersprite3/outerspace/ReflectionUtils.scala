@@ -1,4 +1,3 @@
-import java.nio.file.{Path, Paths, Files}
 import scala.reflect.{ClassTag}
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 

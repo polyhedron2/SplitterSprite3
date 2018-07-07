@@ -11,8 +11,8 @@ import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner, InnerSpawner}
 
 // XMLファイルへの読み書きメソッドの呼び出しを記録するためのフェイククラス
-class FakeSpirit() extends Spirit {
-  val patchablePath = s"bogus/${this.toString}.xml"
+class FakeSpirit() extends Spirit() {
+  val patchablePath = new common.PatchablePath(s"bogus/${this.toString}.xml")
   // 読み書きメソッドの呼び出し時のフィールド名と型を記憶するマップ
   var specMap = Map[String, agent.Specificator.Spec]()
 

@@ -1,7 +1,7 @@
 package jp.gr.java_conf.polyhedron.splittersprite3
 
 import java.io.{Reader}
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Path => NioPath, Paths => NioPaths}
 import javafx.scene.canvas.{GraphicsContext}
 import javafx.stage.{Stage}
 
@@ -33,8 +33,8 @@ object Atmosphere {
 
   // TestIOUtilsを用いて処理を実行し、戻り値として返す
   def withTestIOUtils(
-    gameDirPathFromTestDirPath: Path,
-    gameJarPathFromGameDirPath: Path)(op: => Any):
+    gameDirPathFromTestDirPath: NioPath,
+    gameJarPathFromGameDirPath: NioPath)(op: => Any):
       outerspace.TestIOUtils = synchronized {
     val prevIOUtils = innerIOUtils
     val testIOUtils = new outerspace.TestIOUtils(
@@ -51,11 +51,11 @@ object Atmosphere {
   }
 
   def withTestIOUtils(
-      gameJarPathFromGameDirPath: Path)(op: => Any): outerspace.TestIOUtils =
-    withTestIOUtils(Paths.get(""), gameJarPathFromGameDirPath)(op)
+      gameJarPathFromGameDirPath: NioPath)(op: => Any): outerspace.TestIOUtils =
+    withTestIOUtils(NioPaths.get(""), gameJarPathFromGameDirPath)(op)
 
   def withTestIOUtils(op: => Any): outerspace.TestIOUtils =
-    withTestIOUtils(Paths.get("ver1.0.0", "game.jar"))(op)
+    withTestIOUtils(NioPaths.get("ver1.0.0", "game.jar"))(op)
 
   def withTestTimeUtils(
       currentTimeMillisList: List[Long], timeZoneID: String)(op: => Any):

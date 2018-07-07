@@ -1,6 +1,5 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.spirit
 
-import java.nio.file.{Paths}
 import javafx.scene.image.{Image}
 import scala.reflect.{ClassTag}
 import scala.xml.{Elem, XML, Node}
@@ -10,22 +9,23 @@ import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner, InnerSpawner}
 
-class SpiritValueIsNotFound(patchablePath: String, field: String)
-  extends Exception(s"${patchablePath}[${field}]の値が見つかりません。")
+class SpiritValueIsNotFound(path: common.PatchablePath, field: String)
+  extends Exception(s"${path}[${field}]の値が見つかりません。")
 class SpiritValueIsInvalid(
-  patchablePath: String, field: String, cause: Exception)
-  extends Exception(s"${patchablePath}[${field}]の値が不正です。", cause)
-class SpawnerProcessingLoopException(patchablePath: String)
-  extends Exception(s"${patchablePath}のSpawnerが循環参照しています。")
-class SpawnerIsNotDefined(patchablePath: String)
-  extends Exception(s"${patchablePath}のSpawnerが未定義です。")
+  path: common.PatchablePath, field: String, cause: Exception)
+  extends Exception(s"${path}[${field}]の値が不正です。", cause)
+class SpawnerProcessingLoopException(path: common.PatchablePath)
+  extends Exception(s"${path}のSpawnerが循環参照しています。")
+class SpawnerIsNotDefined(path: common.PatchablePath)
+  extends Exception(s"${path}のSpawnerが未定義です。")
 class SpawnerIsInvalid(
-    patchablePath: String, spawnerName: String, cause: Exception)
-  extends Exception(s"${patchablePath}のSpawner'${spawnerName}'が不正です。")
+    path: common.PatchablePath, spawnerName: String, cause: Exception)
+  extends Exception(s"${path}のSpawner'${spawnerName}'が不正です。")
 class SpawnerNotHaveSpiritConstructor(
-    patchablePath: String, cls: Class[_ <: Spawner[Any]], cause: Exception)
+    path: common.PatchablePath, cls: Class[_ <: Spawner[Any]],
+    cause: Exception)
   extends Exception(
-    s"${patchablePath}のSpawner ${cls.getName()}は" +
+    s"${path}のSpawner ${cls.getName()}は" +
     "スピリットによるコンストラクタを持っていません。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
@@ -122,6 +122,20 @@ abstract class RealSpirit extends Spirit {
             ">" + raw + "</" + element + ">"
           }.map(loadXMLFromString))
       }
+    }
+  }
+
+  protected def pathOpt = new PathOptAccessor()
+
+  class PathOptAccessor() {
+    def apply(typing: String, field: String): Option[common.PatchablePath] =
+      rawOpt("path", typing, field)
+        .map(new common.RelativePath(_)).map(_ +: patchablePath)
+
+    def update(typing: String, field: String,
+               newPathOpt: Option[common.PatchablePath]) {
+      rawOpt("path", typing, field) =
+        newPathOpt.map(_ -: patchablePath).map(_.toString)
     }
   }
 
@@ -237,27 +251,18 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  def resolve(relativePath: String): String =
-    Paths.get(patchablePath).resolve("..").normalize.resolve(
-      relativePath).normalize.toString
-
-  def relativize(otherPatchablePath: String): String =
-    Paths.get(patchablePath).resolve("..").normalize.relativize(
-      Paths.get(otherPatchablePath)).normalize.toString
-
   val image = new RealFileAccessor[Image] {
     val typing = "image"
-    def path2Value(patchablePath: String) =
-      new Image(Atmosphere.ioUtils.inputStream(patchablePath))
+    def path2Value(path: common.PatchablePath) = new Image(path.inputStream)
   }
 
   abstract class RealFileAccessor[FILE_TYPE] extends FileAccessor[FILE_TYPE] {
     val typing: String
-    def path2Value(patchablePath: String): FILE_TYPE
+    def path2Value(path: common.PatchablePath): FILE_TYPE
 
     def apply(field: String): FILE_TYPE = {
       try {
-        rawOpt("path", typing, field).map(resolve).map(path2Value)
+        pathOpt(typing, field).map(path2Value)
       } catch {
         // 文字列をSpawnerに変換できなかった場合
         case e: Exception =>
@@ -269,13 +274,10 @@ abstract class RealSpirit extends Spirit {
     }
   }
 
-  def spawner2RelativePath(spawner: OutermostSpawner[Any]) =
-    relativize(spawner.spirit.patchablePath)
-
   val outermostSpawner = new OutermostSpawnerAccessor {
     def apply[T <: OutermostSpawner[Any]: ClassTag](field: String): T = {
       try {
-        rawOpt("path", "spirit", field).map(resolve).map(
+        pathOpt("spirit", field).map(
           OutermostRealSpirit(_)).map(_.spawner.asInstanceOf[T])
       } catch {
         // 文字列をSpawnerに変換できなかった場合
@@ -288,7 +290,7 @@ abstract class RealSpirit extends Spirit {
     }
 
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
-      rawOpt("path", "spirit", field) = Some(spawner2RelativePath(value))
+      pathOpt("spirit", field) = Some(value.spirit.patchablePath)
     }
   }
 
@@ -316,12 +318,12 @@ abstract class RealSpirit extends Spirit {
     def apply[T1 <: OutermostSpawner[Any]: ClassTag] = {
       val spawnerCls = Atmosphere.reflectionUtils.typeOf[T1]
       if (!cache.isDefinedAt(spawnerCls)) {
-        cache += spawnerCls -> new RealTypeDefiner1[T1](
-        relativePath => OutermostRealSpirit(
-          resolve(relativePath)).spawner.asInstanceOf[T1],
-        spawner2RelativePath,
-        "path", "spirit",
-        (a, b) => a.spirit.patchablePath < b.spirit.patchablePath)
+        cache += (spawnerCls -> new RealTypeDefiner1[T1](
+          relativePathStr => OutermostRealSpirit(
+            relativePathStr +: patchablePath).spawner.asInstanceOf[T1],
+          spawner => (spawner.spirit.patchablePath -: patchablePath).toString,
+          "path", "spirit",
+          (a, b) => a.spirit.patchablePath < b.spirit.patchablePath))
       }
       cache(spawnerCls).asInstanceOf[RealTypeDefiner1[T1]]
     }
@@ -478,6 +480,4 @@ abstract class RealSpirit extends Spirit {
   }
 
   def apply(field: String): InnerRealSpirit = innerSpiritMap("spirit", field)
-
-  override def toString() = s"Spirit(${patchablePath})"
 }

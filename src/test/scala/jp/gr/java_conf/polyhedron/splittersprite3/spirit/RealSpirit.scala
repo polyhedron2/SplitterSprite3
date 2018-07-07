@@ -1,5 +1,5 @@
 import java.lang.reflect.{InvocationTargetException}
-import java.nio.file.{Files}
+import java.nio.file.{Files => NioFiles}
 import scala.xml.{XML, Node, PrettyPrinter}
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
@@ -58,10 +58,10 @@ object RealSpiritSpec {
 class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   def prepare(xmlMap: Map[String, Node]): Map[String, OutermostRealSpirit] = {
     OutermostRealSpirit.clear()
-    Files.createDirectories(Atmosphere.ioUtils.verOrPatchDirPath)
+    NioFiles.createDirectories(Atmosphere.ioUtils.latestPatch.nioPath)
     xmlMap.foreach { case (pathStr, xml) =>
-      val spiritPath = Atmosphere.ioUtils.verOrPatchDirPath.resolve(pathStr)
-      Files.createDirectories(spiritPath.getParent())
+      val spiritPath = Atmosphere.ioUtils.latestPatch.nioPath.resolve(pathStr)
+      NioFiles.createDirectories(spiritPath.getParent())
       XML.save(spiritPath.toAbsolutePath.toString, xml, "UTF-8")
     }
     xmlMap.map { case (pathStr, xml) =>
@@ -87,7 +87,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         prepare(Map())
 
-        val saveSpirit = OutermostRealSpirit("tested.spirit", requireFile=false)
+        val saveSpirit = OutermostRealSpirit("tested.spirit")
         saveSpirit.string("hoge") = "foo"
         saveSpirit.int("fuga") = 42
         saveSpirit.save()
@@ -106,7 +106,7 @@ class RealSpiritSpec extends FlatSpec with DiagrammedAssertions with Matchers {
       agent.LoanAgent.loan {
         prepare(Map())
 
-        val saveSpirit = OutermostRealSpirit("tested.spirit", requireFile=false)
+        val saveSpirit = OutermostRealSpirit("tested.spirit")
         saveSpirit.string("hoge") = "foo"
         saveSpirit.int("fuga") = 42
         saveSpirit("inner").save()

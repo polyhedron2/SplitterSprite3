@@ -10,7 +10,7 @@ class InnerRealSpirit(outer: RealSpirit, typing: String, fieldToThis: String)
   // ロックオブジェクトはOutermostRealSpiritとすることで同一XMLへのアクセスを
   // 管理
   val lock = outer.lock
-  val patchablePath = s"${outer.patchablePath}[${fieldToThis}]"
+  val patchablePath = outer.patchablePath
 
   def xml: Elem = lock.synchronized {
     (outer.xml \ "inner")
@@ -40,4 +40,6 @@ class InnerRealSpirit(outer: RealSpirit, typing: String, fieldToThis: String)
   def withoutParent[T](op: => T) = outer.withoutParent(op)
 
   def save(): Unit = outer.save()
+
+  override def toString = s"${patchablePath}[${fieldToThis}]"
 }

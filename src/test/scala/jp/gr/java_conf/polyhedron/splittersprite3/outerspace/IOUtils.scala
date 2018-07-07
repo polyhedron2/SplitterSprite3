@@ -1,8 +1,9 @@
-import java.nio.file.{Path, Paths, Files}
+import java.nio.file.{Paths => NioPaths, Files => NioFiles}
 import org.scalatest.{FlatSpec, DiagrammedAssertions, Matchers}
 
 import jp.gr.java_conf.polyhedron.splittersprite3.{Atmosphere}
 import jp.gr.java_conf.polyhedron.splittersprite3.agent
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
@@ -37,12 +38,12 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   )
 
   val pathTailMap = Map(
-    (Paths.get("foo") -> "foo"),
-    (Paths.get("foo", "bar") -> "bar"),
-    (Paths.get("foo", "bar", "buz") -> "buz"),
-    (Paths.get("foo", "bar", "ほげ") -> "ほげ"),
-    (Paths.get("foo", "ほげ", "buz") -> "buz"),
-    (Paths.get("foo", "ほげ", "ふが") -> "ふが"),
+    (NioPaths.get("foo") -> "foo"),
+    (NioPaths.get("foo", "bar") -> "bar"),
+    (NioPaths.get("foo", "bar", "buz") -> "buz"),
+    (NioPaths.get("foo", "bar", "ほげ") -> "ほげ"),
+    (NioPaths.get("foo", "ほげ", "buz") -> "buz"),
+    (NioPaths.get("foo", "ほげ", "ふが") -> "ふが"),
   )
 
   val validPatchNameAndAnswerList =
@@ -193,7 +194,7 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   "IOUtils" should "バージョンディレクトリを判別可能" in {
     for (parentDir <- pathTailMap.keys) {
       Atmosphere.withTestIOUtils(
-          parentDir, Paths.get("ver1.0.0", "game.jar")) {
+          parentDir, NioPaths.get("ver1.0.0", "game.jar")) {
         agent.LoanAgent.loan {
           for (name <- validVerNameAndAnswerList.map(_._1)) {
             val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
@@ -202,14 +203,14 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             assert(!Atmosphere.ioUtils.isVersionDirectory(path))
 
             // ファイルが存在なら偽判定
-            Files.createFile(path)
+            NioFiles.createFile(path)
             assert(!Atmosphere.ioUtils.isVersionDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
 
             // ディレクトリが存在なら真判定
-            Files.createDirectories(path)
+            NioFiles.createDirectories(path)
             assert(Atmosphere.ioUtils.isVersionDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
           }
 
           for (name <-
@@ -220,14 +221,14 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             assert(!Atmosphere.ioUtils.isVersionDirectory(path))
 
             // ファイルが存在なら偽判定
-            Files.createFile(path)
+            NioFiles.createFile(path)
             assert(!Atmosphere.ioUtils.isVersionDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
 
             // ディレクトリが存在なら偽判定
-            Files.createDirectories(path)
+            NioFiles.createDirectories(path)
             assert(!Atmosphere.ioUtils.isVersionDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
           }
         }
       }
@@ -237,7 +238,7 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   "IOUtils" should "パッチディレクトリを判別可能" in {
     for (parentDir <- pathTailMap.keys) {
       Atmosphere.withTestIOUtils(
-          parentDir, Paths.get("ver1.0.0", "game.jar")) {
+          parentDir, NioPaths.get("ver1.0.0", "game.jar")) {
         agent.LoanAgent.loan {
           for (name <- validPatchNameAndAnswerList.map(_._1)) {
             val path = Atmosphere.ioUtils.gameDirPath.resolve(name)
@@ -246,14 +247,14 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             assert(!Atmosphere.ioUtils.isPatchDirectory(path))
 
             // ファイルが存在なら偽判定
-            Files.createFile(path)
+            NioFiles.createFile(path)
             assert(!Atmosphere.ioUtils.isPatchDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
 
             // ディレクトリが存在なら真判定
-            Files.createDirectories(path)
+            NioFiles.createDirectories(path)
             assert(Atmosphere.ioUtils.isPatchDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
           }
 
           for (name <-
@@ -264,14 +265,14 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
             assert(!Atmosphere.ioUtils.isPatchDirectory(path))
 
             // ファイルが存在なら偽判定
-            Files.createFile(path)
+            NioFiles.createFile(path)
             assert(!Atmosphere.ioUtils.isPatchDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
 
             // ディレクトリが存在なら偽判定
-            Files.createDirectories(path)
+            NioFiles.createDirectories(path)
             assert(!Atmosphere.ioUtils.isPatchDirectory(path))
-            Files.delete(path)
+            NioFiles.delete(path)
           }
         }
       }
@@ -284,21 +285,21 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         otherFileNames: Set[String], expectedChainNames: List[String]) {
       for (parentDir <- pathTailMap.keys) {
         Atmosphere.withTestIOUtils(
-            parentDir, Paths.get(verOrPatchDirName, "game.jar")) {
+            parentDir, NioPaths.get(verOrPatchDirName, "game.jar")) {
           agent.LoanAgent.loan {
-            Files.createDirectories(
+            NioFiles.createDirectories(
               Atmosphere.ioUtils.gameDirPath.resolve(verOrPatchDirName))
             for (dirName <- otherDirNames) {
               val path = Atmosphere.ioUtils.gameDirPath.resolve(dirName)
-              Files.createDirectories(path)
+              NioFiles.createDirectories(path)
             }
             for (fileName <- otherFileNames) {
               val path = Atmosphere.ioUtils.gameDirPath.resolve(fileName)
-              Files.createFile(path)
+              NioFiles.createFile(path)
             }
 
-            Atmosphere.ioUtils.appliedPatchDirList should be (
-              expectedChainNames.map(Atmosphere.ioUtils.gameDirPath.resolve))
+            Atmosphere.ioUtils.appliedPatchList should be (
+              expectedChainNames.map(new common.Patch(_)))
           }
         }
       }
@@ -348,17 +349,17 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
         verOrPatchDirName: String, otherDirNames: Set[String]) {
       for (parentDir <- pathTailMap.keys) {
         Atmosphere.withTestIOUtils(
-            parentDir, Paths.get(verOrPatchDirName, "game.jar")) {
+            parentDir, NioPaths.get(verOrPatchDirName, "game.jar")) {
           agent.LoanAgent.loan {
-            Files.createDirectories(
+            NioFiles.createDirectories(
               Atmosphere.ioUtils.gameDirPath.resolve(verOrPatchDirName))
             for (dirName <- otherDirNames) {
               val path = Atmosphere.ioUtils.gameDirPath.resolve(dirName)
-              Files.createDirectories(path)
+              NioFiles.createDirectories(path)
             }
 
             val e = intercept[outerspace.IOUtils.InvalidPatchList] {
-              Atmosphere.ioUtils.appliedPatchDirList
+              Atmosphere.ioUtils.appliedPatchList
             }
             val expected = Atmosphere.ioUtils.gameDirPath.resolve(
               verOrPatchDirName).toAbsolutePath
@@ -376,48 +377,46 @@ class IOUtilsSpec extends FlatSpec with DiagrammedAssertions with Matchers {
   }
 
   "IOUtils" should "パッチチェーン内で最新のファイルを選択" in {
-    for (parentDir <- pathTailMap.keys; patchablePath <- pathTailMap.keys) {
-      var patchablePathStr = patchablePath.getName(0).toString
-      for (i <- 1 until patchablePath.getNameCount()) {
+    for (parentDir <- pathTailMap.keys; patchableNioPath <- pathTailMap.keys) {
+      var patchablePathStr = patchableNioPath.getName(0).toString
+      for (i <- 1 until patchableNioPath.getNameCount()) {
         // OSによらず、スラッシュ区切りの文字列
-        patchablePathStr += s"/${patchablePath.getName(i).toString}"
+        patchablePathStr += s"/${patchableNioPath.getName(i).toString}"
       }
+      val patchablePath = new common.PatchablePath(patchablePathStr)
 
       Atmosphere.withTestIOUtils(
           parentDir,
-          Paths.get("patch_from_ver1.0.1_to_ver1.1.0", "game.jar")) {
+          NioPaths.get("patch_from_ver1.0.1_to_ver1.1.0", "game.jar")) {
         agent.LoanAgent.loan {
-          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+          NioFiles.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
             "patch_from_ver1.0.1_to_ver1.1.0"))
-          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+          NioFiles.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
             "patch_from_ver1.0.0_to_ver1.0.1"))
-          Files.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
+          NioFiles.createDirectories(Atmosphere.ioUtils.gameDirPath.resolve(
             "ver1.0.0"))
 
-          intercept[outerspace.IOUtils.FileIsNotFound] {
-            Atmosphere.ioUtils.searchPatchedFile(patchablePathStr)
+          intercept[common.Path.FileIsNotFound] {
+            patchablePath.patched
           }
 
           val oldFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "ver1.0.0").resolve(patchablePath)
-          Files.createDirectories(oldFilePath.getParent())
-          Files.createFile(oldFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
-                 oldFilePath)
+            "ver1.0.0").resolve(patchableNioPath)
+          NioFiles.createDirectories(oldFilePath.getParent())
+          NioFiles.createFile(oldFilePath)
+          assert(patchablePath.patched.nioPath === oldFilePath)
 
           val newerFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchablePath)
-          Files.createDirectories(newerFilePath.getParent())
-          Files.createFile(newerFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
-                 newerFilePath)
+            "patch_from_ver1.0.0_to_ver1.0.1").resolve(patchableNioPath)
+          NioFiles.createDirectories(newerFilePath.getParent())
+          NioFiles.createFile(newerFilePath)
+          assert(patchablePath.patched.nioPath === newerFilePath)
 
           val newestFilePath = Atmosphere.ioUtils.gameDirPath.resolve(
-            "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchablePath)
-          Files.createDirectories(newestFilePath.getParent())
-          Files.createFile(newestFilePath)
-          assert(Atmosphere.ioUtils.searchPatchedFile(patchablePathStr) ===
-                 newestFilePath)
+            "patch_from_ver1.0.1_to_ver1.1.0").resolve(patchableNioPath)
+          NioFiles.createDirectories(newestFilePath.getParent())
+          NioFiles.createFile(newestFilePath)
+          assert(patchablePath.patched.nioPath === newestFilePath)
         }
       }
     }

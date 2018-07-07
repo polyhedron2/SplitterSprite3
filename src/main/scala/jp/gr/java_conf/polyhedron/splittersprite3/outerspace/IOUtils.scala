@@ -1,9 +1,11 @@
 package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
-import java.io.{Reader, Writer, PrintStream}
+import java.io.{PrintStream}
 import java.nio.file.{
-  FileSystems, Files, Paths, Path, StandardOpenOption}
+  Files => NioFiles, Paths => NioPaths, Path => NioPath}
 import scala.collection.JavaConverters._
+
+import jp.gr.java_conf.polyhedron.splittersprite3.common
 
 // SplitterSprite3でのディレクトリ構造は以下の構造とする
 //
@@ -42,14 +44,12 @@ import scala.collection.JavaConverters._
 object IOUtils {
   class InvalidVersionName(val name: String)
     extends Exception(s"バージョン名として${name}は不正です。")
-  class InvalidVersionDirectory(val path: Path)
+  class InvalidVersionDirectory(val path: NioPath)
     extends Exception(s"バージョンディレクトリとして${path}は不正です。")
-  class InvalidPatchDirectory(val path: Path)
+  class InvalidPatchDirectory(val path: NioPath)
     extends Exception(s"パッチディレクトリとして${path}は不正です。")
-  class InvalidPatchList(val path: Path)
+  class InvalidPatchList(val path: NioPath)
     extends Exception(s"${path}へのパッチディレクトリの配置が不正です。")
-  class FileIsNotFound(val patchablePath: String)
-    extends Exception(s"${patchablePath}にファイルが存在しません。")
 }
 
 abstract class IOUtils {
@@ -57,33 +57,34 @@ abstract class IOUtils {
   val stderr: PrintStream
 
   // 実行ファイルのパス
-  val gameJarPath: Path
+  val gameJarPath: NioPath
 
-  lazy val verOrPatchDirPath: Path = gameJarPath.getParent()
-  lazy val gameDirPath: Path = verOrPatchDirPath.getParent()
+  lazy val gameDirPath: NioPath = gameJarPath.getParent().getParent()
+  lazy val latestPatch: common.Patch =
+    new common.Patch(gameJarPath.getParent().getFileName().toString)
 
   lazy val version: (Int, Int, Int) =
-    if (isVersionDirectory(verOrPatchDirPath)) {
-      parseVersionDirectory(verOrPatchDirPath)
-    } else if (isPatchDirectory(verOrPatchDirPath)) {
-      parsePatchDirectory(verOrPatchDirPath)._2
+    if (isVersionDirectory(latestPatch.nioPath)) {
+      parseVersionDirectory(latestPatch.nioPath)
+    } else if (isPatchDirectory(latestPatch.nioPath)) {
+      parsePatchDirectory(latestPatch.nioPath)._2
     } else {
-      throw new IOUtils.InvalidPatchList(verOrPatchDirPath)
+      throw new IOUtils.InvalidPatchList(latestPatch.nioPath)
     }
 
   lazy val versionName = s"ver${version._1}.${version._2}.${version._3}"
 
-  lazy val appliedPatchDirList: List[Path] =
-    appliedPatchDirList(verOrPatchDirPath, version)
+  lazy val appliedPatchList: List[common.Patch] =
+    appliedPatchList(latestPatch, version)
 
-  def tailNameOf(path: Path): String =
+  def tailNameOf(path: NioPath): String =
     path.getName(path.getNameCount() - 1).toString
 
   def hasZenkaku(str: String): Boolean = str.length != str.getBytes().length
 
-  def childrenList(path: Path): List[Path] = {
-    if (Files.isDirectory(path)) {
-      val stream = Files.newDirectoryStream(path)
+  def childrenList(path: NioPath): List[NioPath] = {
+    if (NioFiles.isDirectory(path)) {
+      val stream = NioFiles.newDirectoryStream(path)
       try { stream.iterator().asScala.toList } finally { stream.close() }
     } else { Nil }
   }
@@ -117,7 +118,7 @@ abstract class IOUtils {
   }
 
   // "verA.B.C"を(A, B, C)の整数３つ組にパース
-  def parseVersionDirectory(path: Path): (Int, Int, Int) = try {
+  def parseVersionDirectory(path: NioPath): (Int, Int, Int) = try {
     parseVersionName(tailNameOf(path))
   } catch {
     case e: IOUtils.InvalidVersionName =>
@@ -125,7 +126,7 @@ abstract class IOUtils {
   }
 
   // "patch_from_verA.B.C_to_verX.Y.Z"を((A, B, C), (X, Y, Z))にパース
-  def parsePatchDirectory(path: Path): ((Int, Int, Int), (Int, Int, Int)) =
+  def parsePatchDirectory(path: NioPath): ((Int, Int, Int), (Int, Int, Int)) =
     try {
       val name = tailNameOf(path)
 
@@ -168,74 +169,53 @@ abstract class IOUtils {
           fromVersion._2 == toVersion._2 && {
             fromVersion._3 < toVersion._3 } } } }
 
-  def isVersionDirectory(path: Path): Boolean =
-    Files.isDirectory(path) && (try {
-      parseVersionDirectory(path)
+  def isVersionDirectory(path: NioPath): Boolean = {
+    val resolvedPath = gameDirPath.resolve(path)
+    NioFiles.isDirectory(resolvedPath) && (try {
+      parseVersionDirectory(resolvedPath)
       true
     } catch {
       case e: IOUtils.InvalidVersionDirectory => false
     })
+  }
 
-  def isPatchDirectory(path: Path): Boolean =
-    Files.isDirectory(path) && (try {
-      parsePatchDirectory(path)
+  def isPatchDirectory(path: NioPath): Boolean = {
+    val resolvedPath = gameDirPath.resolve(path)
+    NioFiles.isDirectory(resolvedPath) && (try {
+      parsePatchDirectory(resolvedPath)
       true
     } catch {
       case e: IOUtils.InvalidPatchDirectory => false
     })
+  }
 
   // 指定パスが指定バージョンにつながっていればパッチチェーンを返す
-  private def appliedPatchDirList(
-      path: Path, toVersion: (Int, Int, Int)): List[Path] =
-    if (isVersionDirectory(path) &&
-        parseVersionDirectory(path) == toVersion) {
-      List(path)
-    } else if (isPatchDirectory(path) &&
-               parsePatchDirectory(path)._2 == toVersion) {
-      val fromVersion = parsePatchDirectory(path)._1
+  private def appliedPatchList(
+      patch: common.Patch, toVersion: (Int, Int, Int)): List[common.Patch] =
+    if (isVersionDirectory(patch.nioPath) &&
+        parseVersionDirectory(patch.nioPath) == toVersion) {
+      List(patch)
+    } else if (isPatchDirectory(patch.nioPath) &&
+               parsePatchDirectory(patch.nioPath)._2 == toVersion) {
+      val fromVersion = parsePatchDirectory(patch.nioPath)._1
 
       val dirList = childrenList(gameDirPath)
 
       // dirList内のディレクトリからパッチチェーンを探す
-      def findAppliedPatchDirList(dirList: List[Path]): List[Path] =
+      def findAppliedPatchList(dirList: List[NioPath]): List[common.Patch] =
         dirList match {
           case head :: tail => try {
-            appliedPatchDirList(head, fromVersion)
+            appliedPatchList(
+              new common.Patch(head.getFileName().toString), fromVersion)
           } catch {
             // 試したディレクトリで失敗したら次のディレクトリに進む
-            case e: IOUtils.InvalidPatchList => findAppliedPatchDirList(tail)
+            case e: IOUtils.InvalidPatchList => findAppliedPatchList(tail)
           }
-          case Nil => throw new IOUtils.InvalidPatchList(path)
+          case Nil => throw new IOUtils.InvalidPatchList(patch.nioPath)
         }
 
-      path :: findAppliedPatchDirList(dirList)
+      patch :: findAppliedPatchList(dirList)
     } else {
-      throw new IOUtils.InvalidPatchList(path)
+      throw new IOUtils.InvalidPatchList(patch.nioPath)
     }
-
-  def searchPatchedFile(patchablePathStr: String): Path = {
-    val separator = FileSystems.getDefault().getSeparator()
-    val patchablePath = Paths.get(patchablePathStr.replace("/", separator))
-    appliedPatchDirList.map(_.resolve(patchablePath)).find(Files.exists(_))
-      .getOrElse { throw new IOUtils.FileIsNotFound(patchablePathStr) }
-  }
-
-  def withPatchedReader[T](patchablePath: String)(op: Reader => T): T = {
-    // UTF-8として存在するうちの最新パッチから読み込み
-    val reader = Files.newBufferedReader(searchPatchedFile(patchablePath))
-    try { op(reader) } finally { reader.close() }
-  }
-
-  def inputStream(patchablePath: String) =
-    Files.newInputStream(searchPatchedFile(patchablePath))
-
-  def withPatchedWriter[T](patchablePath: String)(op: Writer => T): T = {
-    val targetPath = appliedPatchDirList.head.resolve(patchablePath)
-    Files.createDirectories(targetPath.getParent())
-    if (!Files.exists(targetPath)) { Files.createFile(targetPath) }
-
-    // UTF-8として現在のパッチに書き込み
-    val writer = Files.newBufferedWriter(targetPath, StandardOpenOption.WRITE)
-    try { op(writer) } finally { writer.close() }
-  }
 }

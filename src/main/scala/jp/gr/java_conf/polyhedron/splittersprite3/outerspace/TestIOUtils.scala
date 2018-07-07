@@ -2,27 +2,27 @@ package jp.gr.java_conf.polyhedron.splittersprite3.outerspace
 
 import java.io.{PrintStream, ByteArrayOutputStream}
 import java.nio.charset.{StandardCharsets}
-import java.nio.file.{Files, Paths, Path}
+import java.nio.file.{Files => NioFiles, Paths => NioPaths, Path => NioPath}
 import scala.collection.JavaConverters._
 
 // gameJarPathFromGameDirPath: TmpDirから実行ファイルへの相対パス
 class TestIOUtils(
-    gameDirPathFromTestDirPath: Path, gameJarPathFromGameDirPath: Path)
+    gameDirPathFromTestDirPath: NioPath, gameJarPathFromGameDirPath: NioPath)
     extends IOUtils {
   private val tmpDirPath =
-    Paths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath()
+    NioPaths.get(System.getProperty("java.io.tmpdir")).toAbsolutePath()
   private val testDirPath =
-    Files.createTempDirectory(tmpDirPath, "splittersprite-test-ioutils-")
+    NioFiles.createTempDirectory(tmpDirPath, "splittersprite-test-ioutils-")
   private val tmpGameDirPath = testDirPath.resolve(gameDirPathFromTestDirPath)
 
   def enter() {
-    Files.createDirectories(tmpGameDirPath)
+    NioFiles.createDirectories(tmpGameDirPath)
   }
 
   def exit() {
-    def recursiveDelete(path: Path) {
+    def recursiveDelete(path: NioPath) {
       childrenList(path).foreach(recursiveDelete)
-      Files.delete(path)
+      NioFiles.delete(path)
     }
     recursiveDelete(testDirPath)
   }
