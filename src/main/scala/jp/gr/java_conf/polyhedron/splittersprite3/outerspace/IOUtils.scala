@@ -63,6 +63,10 @@ abstract class IOUtils {
   lazy val latestPatch: common.Patch =
     new common.Patch(gameJarPath.getParent().getFileName().toString)
 
+  private var editPatchOpt: Option[common.Patch] = None
+  def editPatch: common.Patch = editPatchOpt.getOrElse(latestPatch)
+  def editPatch_=(ep: common.Patch) { editPatchOpt = Some(ep) }
+
   lazy val version: (Int, Int, Int) =
     if (isVersionDirectory(latestPatch.nioPath)) {
       parseVersionDirectory(latestPatch.nioPath)

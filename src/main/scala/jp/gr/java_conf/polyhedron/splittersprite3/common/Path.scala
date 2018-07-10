@@ -51,7 +51,7 @@ class PatchablePath(pathStr: String) extends Path(pathStr) {
   def inputStream = NioFiles.newInputStream(patched.nioPath)
 
   def withWriter[T](op: Writer => T): T = {
-    val targetPath = this +: Atmosphere.ioUtils.latestPatch
+    val targetPath = this +: Atmosphere.ioUtils.editPatch
     targetPath.create()
 
     // UTF-8として現在のパッチに書き込み
