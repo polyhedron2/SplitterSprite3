@@ -9,23 +9,21 @@ import jp.gr.java_conf.polyhedron.splittersprite3.common
 import jp.gr.java_conf.polyhedron.splittersprite3.spawner.{
   Spawner, OutermostSpawner, InnerSpawner}
 
-class SpiritValueIsNotFound(path: common.PatchablePath, field: String)
-  extends Exception(s"${path}[${field}]の値が見つかりません。")
-class SpiritValueIsInvalid(
-  path: common.PatchablePath, field: String, cause: Exception)
-  extends Exception(s"${path}[${field}]の値が不正です。", cause)
-class SpawnerProcessingLoopException(path: common.PatchablePath)
-  extends Exception(s"${path}のSpawnerが循環参照しています。")
-class SpawnerIsNotDefined(path: common.PatchablePath)
-  extends Exception(s"${path}のSpawnerが未定義です。")
+class SpiritValueIsNotFound(spirit: RealSpirit, field: String)
+  extends Exception(s"${spirit}[${field}]の値が見つかりません。")
+class SpiritValueIsInvalid(spirit: RealSpirit, field: String, cause: Exception)
+  extends Exception(s"${spirit}[${field}]の値が不正です。", cause)
+class SpawnerProcessingLoopException(spirit: RealSpirit)
+  extends Exception(s"${spirit}のSpawnerが循環参照しています。")
+class SpawnerIsNotDefined(spirit: RealSpirit)
+  extends Exception(s"${spirit}のSpawnerが未定義です。")
 class SpawnerIsInvalid(
-    path: common.PatchablePath, spawnerName: String, cause: Exception)
-  extends Exception(s"${path}のSpawner'${spawnerName}'が不正です。")
+    spirit: RealSpirit, spawnerName: String, cause: Exception)
+  extends Exception(s"${spirit}のSpawner'${spawnerName}'が不正です。")
 class SpawnerNotHaveSpiritConstructor(
-    path: common.PatchablePath, cls: Class[_ <: Spawner[Any]],
-    cause: Exception)
+    spirit: RealSpirit, cls: Class[_ <: Spawner[Any]], cause: Exception)
   extends Exception(
-    s"${path}のSpawner ${cls.getName()}は" +
+    s"${spirit}のSpawner ${cls.getName()}は" +
     "スピリットによるコンストラクタを持っていません。")
 
 // XMLファイルに実際に読み書きを実行する抽象クラス
@@ -161,7 +159,7 @@ abstract class RealSpirit extends Spirit {
         Class.forName(raw).asInstanceOf[Class[Spawner[Any]]]
       } catch {
         case e: Exception =>
-          throw new SpawnerIsInvalid(patchablePath, raw, e)
+          throw new SpawnerIsInvalid(this, raw, e)
       }
     }
 
@@ -172,17 +170,17 @@ abstract class RealSpirit extends Spirit {
 
   // このSpiritからSpawnするSpawner
   def spawner: Spawner[Any] = if (isProcessingSpawner) {
-    throw new SpawnerProcessingLoopException(patchablePath)
+    throw new SpawnerProcessingLoopException(this)
   } else {
     val cls = spawnerClassOpt.getOrElse {
-      throw new SpawnerIsNotDefined(patchablePath)
+      throw new SpawnerIsNotDefined(this)
     }
 
     val constructor = try {
       cls.getConstructor(classOf[Spirit])
     } catch {
       case e: Exception =>
-        throw new SpawnerNotHaveSpiritConstructor(patchablePath, cls, e)
+        throw new SpawnerNotHaveSpiritConstructor(this, cls, e)
     }
 
     try {
@@ -232,11 +230,11 @@ abstract class RealSpirit extends Spirit {
       } catch {
         // 文字列をリテラルに変換できなかった場合
         case e: Exception =>
-          throw new SpiritValueIsInvalid(patchablePath, field, e)
+          throw new SpiritValueIsInvalid(RealSpirit.this, field, e)
       }
     } getOrElse {
       // 文字列が設定されていなかった場合
-      throw new SpiritValueIsNotFound(patchablePath, field)
+      throw new SpiritValueIsNotFound(RealSpirit.this, field)
     }
 
     def apply(field: String, default: LITERAL): LITERAL = try {
@@ -266,11 +264,11 @@ abstract class RealSpirit extends Spirit {
       } catch {
         // 文字列をSpawnerに変換できなかった場合
         case e: Exception =>
-          throw new SpiritValueIsInvalid(patchablePath, field, e)
+          throw new SpiritValueIsInvalid(RealSpirit.this, field, e)
       }
     } getOrElse {
       // 文字列が設定されていなかった場合
-      throw new SpiritValueIsNotFound(patchablePath, field)
+      throw new SpiritValueIsNotFound(RealSpirit.this, field)
     }
   }
 
@@ -282,11 +280,11 @@ abstract class RealSpirit extends Spirit {
       } catch {
         // 文字列をSpawnerに変換できなかった場合
         case e: Exception =>
-          throw new SpiritValueIsInvalid(patchablePath, field, e)
+          throw new SpiritValueIsInvalid(RealSpirit.this, field, e)
       }
     } getOrElse {
       // 文字列が設定されていなかった場合
-      throw new SpiritValueIsNotFound(patchablePath, field)
+      throw new SpiritValueIsNotFound(RealSpirit.this, field)
     }
 
     def update[T <: OutermostSpawner[Any]: ClassTag](field: String, value: T) {
